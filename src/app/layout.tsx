@@ -9,6 +9,9 @@ export const metadata: Metadata = {
     template: "%s | SchoolFlow Admin LITE",
   },
   description: "Minimal admin-only foundation for SchoolFlow operations.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export const viewport: Viewport = {
