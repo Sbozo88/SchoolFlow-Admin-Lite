@@ -1,10 +1,11 @@
 "use client";
 
-import { Loader2, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
+import { BrandedLoading } from "@/components/ui/BrandedLoading";
 
 function safeNextPath(value: string | null) {
   if (value && value.startsWith("/") && !value.startsWith("//")) {
@@ -29,6 +30,17 @@ export function LoginForm() {
       router.replace(nextPath);
     }
   }, [loading, nextPath, router, user]);
+
+  if (isSubmitting || loading) {
+    return (
+      <div className="w-full max-w-md">
+        <BrandedLoading
+          title={user ? "Opening admin workspace" : "Signing you in"}
+          detail="Securing your SchoolFlow session and preparing the dashboard."
+        />
+      </div>
+    );
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -140,7 +152,6 @@ export function LoginForm() {
       </div>
 
       <Button className="w-full" disabled={!isConfigured || isSubmitting} type="submit">
-        {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : null}
         Sign in
       </Button>
 

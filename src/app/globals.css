@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -77,6 +76,44 @@ textarea {
 
 .animate-slide-in {
   animation: slide-in-left 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@keyframes school-logo-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 18px 22px rgb(20 184 166 / 0.18));
+  }
+  50% {
+    transform: scale(1.06);
+    filter: drop-shadow(0 22px 28px rgb(251 146 60 / 0.22));
+  }
+}
+
+@keyframes school-loading-bar {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(240%);
+  }
+}
+
+.school-logo-pulse {
+  animation: school-logo-pulse 1.8s ease-in-out infinite;
+}
+
+.school-loading-bar {
+  animation: school-loading-bar 1.35s ease-in-out infinite;
+}
+
+.school-loading-grid {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.06) 1px, transparent 1px),
+    radial-gradient(circle at 20% 20%, rgb(20 184 166 / 0.22), transparent 28%),
+    radial-gradient(circle at 82% 72%, rgb(251 146 60 / 0.2), transparent 30%);
+  background-size: 44px 44px, 44px 44px, 100% 100%, 100% 100%;
 }
 
 /* Smooth scrollbar styling */

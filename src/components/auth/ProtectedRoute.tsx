@@ -1,11 +1,12 @@
 "use client";
 
-import { Loader2, LockKeyhole, ShieldAlert } from "lucide-react";
+import { LockKeyhole, ShieldAlert } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { Button } from "@/components/ui/Button";
+import { BrandedLoading } from "@/components/ui/BrandedLoading";
 import type { Role } from "@/lib/types";
 
 export function ProtectedRoute({
@@ -36,9 +37,9 @@ export function ProtectedRoute({
 
   if (loading || !user) {
     return (
-      <AccessShell
+      <BrandedLoading
         detail="Checking your secure Firebase session."
-        icon={<Loader2 className="animate-spin" size={24} />}
+        fullScreen
         title="Loading SchoolFlow Admin LITE"
       />
     );
