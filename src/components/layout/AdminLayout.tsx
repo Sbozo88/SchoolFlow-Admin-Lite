@@ -12,8 +12,6 @@ import {
   CheckCircle,
   LifeBuoy,
   Inbox,
-  Sun,
-  Moon,
   Bell,
   Mail,
   Menu,
@@ -22,7 +20,8 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AccountMenu } from "@/components/auth/AccountMenu";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 const primaryNavItems = [
   { label: "Dashboard", href: "/admin", icon: BarChart3 },
@@ -69,19 +68,6 @@ function NavLink({
 export function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isDark, setIsDark] = useState(false);
-  const [prevPath, setPrevPath] = useState(pathname);
-
-  // Close mobile menu on route change
-  if (pathname !== prevPath) {
-    setPrevPath(pathname);
-    setIsMobileMenuOpen(false);
-  }
-
-  // Apply dark mode to document
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", isDark);
-  }, [isDark]);
 
   // Derive title from pathname
   const activePrimary = primaryNavItems.find((item) =>
@@ -193,13 +179,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3 bg-white dark:bg-slate-800 px-2 sm:px-3 py-2 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700">
-            <button
-              onClick={() => setIsDark(!isDark)}
-              className="size-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition"
-              aria-label="Toggle dark mode"
-            >
-              {isDark ? <Moon size={18} /> : <Sun size={18} className="text-orange-400" />}
-            </button>
+            <ThemeToggle />
             <button
               className="size-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition"
               aria-label="Notifications"

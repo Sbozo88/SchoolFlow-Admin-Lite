@@ -14,11 +14,11 @@ export function EmptyState({
   return (
     <Card className="grid min-h-64 place-items-center p-8 text-center">
       <div>
-        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+        <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-lg bg-slate-100 text-slate-500 dark:bg-slate-700 dark:text-slate-300">
           <Inbox size={24} />
         </div>
-        <h2 className="text-lg font-black text-slate-950">{title}</h2>
-        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">{description}</p>
+        <h2 className="text-lg font-black text-slate-950 dark:text-white">{title}</h2>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600 dark:text-slate-300">{description}</p>
         {action ? <div className="mt-5">{action}</div> : null}
       </div>
     </Card>

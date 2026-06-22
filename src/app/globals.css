@@ -41,6 +41,11 @@ body {
   letter-spacing: 0;
 }
 
+.dark body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
 button,
 input,
 select,
@@ -88,4 +93,60 @@ textarea {
 
 .dark ::-webkit-scrollbar-thumb {
   background: #475569;
+}
+
+/* Dark-mode compatibility for existing Tailwind utility markup. */
+.dark .bg-white {
+  background-color: #1e293b;
+}
+
+.dark .bg-slate-50,
+.dark .bg-\[\#F4F7FE\] {
+  background-color: #0f172a;
+}
+
+.dark .bg-slate-100 {
+  background-color: #334155;
+}
+
+.dark .bg-slate-50\/50 {
+  background-color: rgb(30 41 59 / 0.5);
+}
+
+.dark .border-slate-50,
+.dark .border-slate-100,
+.dark .border-slate-200 {
+  border-color: #334155;
+}
+
+.dark .text-slate-950,
+.dark .text-slate-900 {
+  color: #f8fafc;
+}
+
+.dark .text-slate-800,
+.dark .text-slate-700 {
+  color: #e2e8f0;
+}
+
+.dark .text-slate-600,
+.dark .text-slate-500 {
+  color: #cbd5e1;
+}
+
+.dark .text-slate-400 {
+  color: #94a3b8;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: #0f172a;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b;
 }

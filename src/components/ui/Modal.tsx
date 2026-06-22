@@ -21,9 +21,9 @@ export function Modal({
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
-      <section className="w-full max-w-lg rounded-lg border border-slate-200 bg-white shadow-xl">
-        <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 className="text-lg font-black text-slate-950">{title}</h2>
+      <section className="w-full max-w-lg rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
+        <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
+          <h2 className="text-lg font-black text-slate-950 dark:text-white">{title}</h2>
           <Button aria-label="Close modal" className="size-9 p-0" onClick={onClose} type="button" variant="ghost">
             <X size={18} />
           </Button>

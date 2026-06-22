@@ -16,13 +16,13 @@ export function Table<T>({
   getRowKey: (row: T) => string;
 }) {
   return (
-    <div className="overflow-hidden rounded-3xl bg-white shadow-sm">
+    <div className="overflow-hidden rounded-3xl bg-white shadow-sm dark:bg-slate-800">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] border-collapse text-left">
           <thead>
             <tr>
               {columns.map((column) => (
-                <th className="border-b border-slate-100 bg-white px-6 py-4 text-xs font-black uppercase tracking-wider text-slate-400" key={column.key}>
+                <th className="border-b border-slate-100 bg-white px-6 py-4 text-xs font-black uppercase tracking-wider text-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400" key={column.key}>
                   {column.header}
                 </th>
               ))}
@@ -30,9 +30,9 @@ export function Table<T>({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr className="border-b border-slate-50 last:border-0 hover:bg-slate-50/50 transition-colors" key={getRowKey(row)}>
+              <tr className="border-b border-slate-50 transition-colors last:border-0 hover:bg-slate-50/50 dark:border-slate-700 dark:hover:bg-slate-700/50" key={getRowKey(row)}>
                 {columns.map((column) => (
-                  <td className="px-6 py-4 text-sm font-semibold text-slate-800" key={column.key}>
+                  <td className="px-6 py-4 text-sm font-semibold text-slate-800 dark:text-slate-200" key={column.key}>
                     {column.render(row)}
                   </td>
                 ))}
