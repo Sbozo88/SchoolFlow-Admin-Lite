@@ -70,6 +70,23 @@ service cloud.firestore {
     }
 
     match /parentSubmissions/{document=**} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /setupSprintTasks/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /missingInfoItems/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /supportChecks/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /programmeSettings/{document=**} {
       allow read, write: if isAdmin();
     }
 

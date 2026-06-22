@@ -2,8 +2,6 @@
 
 import { Pencil, Trash2, UserPlus } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -26,6 +24,7 @@ const emptyFormValues: LearnerFormValues = {
   parentPhone: "",
   parentEmail: "",
   paymentStatus: "unpaid",
+  learnerStatus: "active",
   notes: "",
 };
 
@@ -40,6 +39,7 @@ function toFormValues(learner: Learner): LearnerFormValues {
     parentPhone: learner.parentPhone,
     parentEmail: learner.parentEmail ?? "",
     paymentStatus: learner.paymentStatus,
+    learnerStatus: learner.learnerStatus ?? "active",
     notes: learner.notes ?? "",
   };
 }
@@ -78,6 +78,15 @@ export function LearnersPage() {
       render: (learner) => (
         <Badge tone={learner.paymentStatus === "paid" ? "green" : learner.paymentStatus === "overdue" ? "rose" : "amber"}>
           {learner.paymentStatus}
+        </Badge>
+      ),
+    },
+    {
+      key: "learnerStatus",
+      header: "Status",
+      render: (learner) => (
+        <Badge tone={learner.learnerStatus === "active" ? "green" : learner.learnerStatus === "pending" ? "amber" : "slate"}>
+          {learner.learnerStatus}
         </Badge>
       ),
     },
@@ -171,8 +180,7 @@ export function LearnersPage() {
   }
 
   return (
-    <ProtectedRoute>
-      <AdminLayout activeItem="Learners">
+    <>
         <PageHeader
           action={
             <Button disabled={!isConfigured} onClick={openCreateForm} type="button">
@@ -264,17 +272,30 @@ export function LearnersPage() {
               value={formValues.parentEmail}
             />
             <div className="grid gap-4 sm:grid-cols-[220px_minmax(0,1fr)]">
-              <Select
-                id="paymentStatus"
-                label="Payment status"
-                onChange={(event) => setFormValues((current) => ({ ...current, paymentStatus: event.target.value as LearnerFormValues["paymentStatus"] }))}
-                value={formValues.paymentStatus}
-              >
-                <option value="unpaid">Unpaid</option>
-                <option value="partial">Partial</option>
-                <option value="paid">Paid</option>
-                <option value="overdue">Overdue</option>
-              </Select>
+              <div className="grid gap-4">
+                <Select
+                  id="paymentStatus"
+                  label="Payment status"
+                  onChange={(event) => setFormValues((current) => ({ ...current, paymentStatus: event.target.value as LearnerFormValues["paymentStatus"] }))}
+                  value={formValues.paymentStatus}
+                >
+                  <option value="unpaid">Unpaid</option>
+                  <option value="partial">Partial</option>
+                  <option value="paid">Paid</option>
+                  <option value="overdue">Overdue</option>
+                </Select>
+                <Select
+                  id="learnerStatus"
+                  label="Learner status"
+                  onChange={(event) => setFormValues((current) => ({ ...current, learnerStatus: event.target.value as LearnerFormValues["learnerStatus"] }))}
+                  value={formValues.learnerStatus}
+                >
+                  <option value="active">Active</option>
+                  <option value="inactive">Inactive</option>
+                  <option value="pending">Pending</option>
+                  <option value="archived">Archived</option>
+                </Select>
+              </div>
               <label className="grid gap-2 text-sm font-bold text-slate-700" htmlFor="notes">
                 <span>Notes</span>
                 <textarea
@@ -296,8 +317,7 @@ export function LearnersPage() {
             </div>
           </form>
         </Modal>
-      </AdminLayout>
-    </ProtectedRoute>
+    </>
   );
 }
 

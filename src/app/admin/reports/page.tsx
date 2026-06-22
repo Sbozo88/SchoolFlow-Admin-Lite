@@ -1,4 +1,4 @@
-import { ReportsPage } from "@/pages/admin/ReportsPage";
+import { ReportsPage } from "@/views/admin/ReportsPage";
 
 export default function AdminReportsRoute() {
   return <ReportsPage />;

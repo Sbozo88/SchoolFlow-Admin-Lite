@@ -1,12 +1,18 @@
-export type ParentSubmissionStatus = "new" | "contacted" | "converted" | "closed";
+export type ParentSubmissionStatus = "new" | "reviewed" | "converted" | "archived";
 
 export type ParentSubmission = {
   id: string;
+  learnerFirstName: string;
+  learnerLastName: string;
+  className: string;
+  programme: string;
+  instrumentOrActivity?: string;
   parentName: string;
-  parentEmail: string;
   parentPhone: string;
-  learnerName: string;
+  parentEmail?: string;
+  emergencyContact?: string;
   message?: string;
   status: ParentSubmissionStatus;
-  submittedAt?: Date;
+  createdAt: Date;
+  updatedAt: Date;
 };

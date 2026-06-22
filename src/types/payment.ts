@@ -1,14 +1,16 @@
-import type { Timestamp } from "firebase/firestore";
+export type PaymentStatus = "paid" | "unpaid" | "partial" | "overdue";
 
-export type PaymentStatus = "draft" | "sent" | "paid" | "overdue";
-
-export type Payment = {
+export type PaymentRecord = {
   id: string;
   learnerId: string;
   learnerName: string;
-  parentName: string;
-  amount: number;
-  dueDate: Timestamp | Date;
+  month: string;
+  expectedAmount: number;
+  paidAmount: number;
+  balance: number;
   status: PaymentStatus;
-  paidAt?: Timestamp | Date;
+  paymentDate?: string;
+  notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
 };

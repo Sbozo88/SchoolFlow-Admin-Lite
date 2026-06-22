@@ -1,4 +1,4 @@
-import { LoginPage } from "@/pages/admin/LoginPage";
+import { LoginPage } from "@/views/admin/LoginPage";
 
 export default function LoginRoute() {
   return <LoginPage />;

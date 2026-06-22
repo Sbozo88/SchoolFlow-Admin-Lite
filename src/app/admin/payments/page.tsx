@@ -1,4 +1,4 @@
-import { PaymentsPage } from "@/pages/admin/PaymentsPage";
+import { PaymentsPage } from "@/views/admin/PaymentsPage";
 
 export default function AdminPaymentsRoute() {
   return <PaymentsPage />;

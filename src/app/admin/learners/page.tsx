@@ -1,4 +1,4 @@
-import { LearnersPage } from "@/pages/admin/LearnersPage";
+import { LearnersPage } from "@/views/admin/LearnersPage";
 
 export default function AdminLearnersRoute() {
   return <LearnersPage />;

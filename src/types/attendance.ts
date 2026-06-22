@@ -1,12 +1,14 @@
-import type { Timestamp } from "firebase/firestore";
-
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
 export type AttendanceRecord = {
   id: string;
   learnerId: string;
   learnerName: string;
-  lessonDate: Timestamp | Date;
+  date: string;
   status: AttendanceStatus;
+  className?: string;
+  programme?: string;
   notes?: string;
+  createdAt: Date;
+  updatedAt: Date;
 };

@@ -35,6 +35,7 @@ function toLearnerPayload(values: LearnerFormValues) {
     parentPhone: values.parentPhone.trim(),
     parentEmail: cleanOptional(values.parentEmail),
     paymentStatus: values.paymentStatus,
+    learnerStatus: values.learnerStatus,
     notes: cleanOptional(values.notes),
   };
 }

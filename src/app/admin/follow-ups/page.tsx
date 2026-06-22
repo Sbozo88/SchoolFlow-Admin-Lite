@@ -1,4 +1,4 @@
-import { FollowUpsPage } from "@/pages/admin/FollowUpsPage";
+import { FollowUpsPage } from "@/views/admin/FollowUpsPage";
 
 export default function AdminFollowUpsRoute() {
   return <FollowUpsPage />;
