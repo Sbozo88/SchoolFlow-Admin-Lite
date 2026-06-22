@@ -1,0 +1,80 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userPath() {
+      return /databases/$(database)/documents/users/$(request.auth.uid);
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(userPath())
+        && get(userPath()).data.role == "admin";
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow create, update, delete: if isAdmin();
+    }
+
+    match /schools/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /students/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /learners/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /attendance/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /invoices/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /payments/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /messageQueue/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /routes/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /parentReports/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /followUps/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /reports/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /settings/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /parentSubmissions/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
