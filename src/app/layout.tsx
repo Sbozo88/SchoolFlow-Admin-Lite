@@ -22,7 +22,11 @@ export default function RootLayout({
 }>) {
   const themeScript = `
     try {
-      const theme = localStorage.getItem("schoolflow-theme") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      if (localStorage.getItem("schoolflow-theme-version") !== "2") {
+        localStorage.setItem("schoolflow-theme", "light");
+        localStorage.setItem("schoolflow-theme-version", "2");
+      }
+      const theme = localStorage.getItem("schoolflow-theme") === "dark" ? "dark" : "light";
       document.documentElement.classList.toggle("dark", theme === "dark");
       document.documentElement.style.colorScheme = theme;
     } catch (_) {}

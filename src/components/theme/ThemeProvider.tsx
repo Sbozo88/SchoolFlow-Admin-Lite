@@ -11,6 +11,8 @@ type ThemeContextValue = {
 };
 
 const storageKey = "schoolflow-theme";
+const storageVersionKey = "schoolflow-theme-version";
+const storageVersion = "2";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function getPreferredTheme(): Theme {
@@ -18,12 +20,14 @@ function getPreferredTheme(): Theme {
     return "light";
   }
 
-  const storedTheme = window.localStorage.getItem(storageKey);
-  if (storedTheme === "light" || storedTheme === "dark") {
-    return storedTheme;
+  if (window.localStorage.getItem(storageVersionKey) !== storageVersion) {
+    window.localStorage.setItem(storageKey, "light");
+    window.localStorage.setItem(storageVersionKey, storageVersion);
+    return "light";
   }
 
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  const storedTheme = window.localStorage.getItem(storageKey);
+  return storedTheme === "dark" ? "dark" : "light";
 }
 
 function applyTheme(theme: Theme) {
@@ -41,6 +45,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = useCallback((nextTheme: Theme) => {
     setThemeState(nextTheme);
     window.localStorage.setItem(storageKey, nextTheme);
+    window.localStorage.setItem(storageVersionKey, storageVersion);
     applyTheme(nextTheme);
   }, []);
 
