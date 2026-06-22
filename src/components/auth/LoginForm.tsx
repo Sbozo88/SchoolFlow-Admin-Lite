@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck } from "lucide-react";
+import { School, LockKeyhole } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -87,15 +87,13 @@ export function LoginForm() {
   }
 
   return (
-    <form className="w-full max-w-md rounded-lg border border-slate-200 bg-white p-6 shadow-sm" onSubmit={handleSubmit}>
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex size-12 items-center justify-center rounded-xl bg-slate-950 text-white">
-          <ShieldCheck size={24} />
+    <form className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none" onSubmit={handleSubmit}>
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400">
+          <School size={28} />
         </div>
-        <div>
-          <h1 className="text-xl font-black text-slate-950">SchoolFlow Admin LITE</h1>
-          <p className="text-sm text-slate-500">Admin-only access</p>
-        </div>
+        <h1 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">SchoolFlow Admin LITE</h1>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Secure access to your school management dashboard</p>
       </div>
 
       {!isConfigured ? (
@@ -106,53 +104,56 @@ export function LoginForm() {
 
       {authError ? <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{authError}</p> : null}
 
-      <label className="mb-2 block text-sm font-bold text-slate-700" htmlFor="email">
+      <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300" htmlFor="email">
         Email
       </label>
       <input
         autoComplete="email"
-        className="mb-4 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100"
+        className="mb-5 h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-teal-500 dark:focus:bg-slate-900 dark:focus:ring-teal-900/30"
         id="email"
         onChange={(event) => setEmail(event.target.value)}
         required
         type="email"
         value={email}
+        placeholder="admin@school.com"
       />
 
-      <label className="mb-2 block text-sm font-bold text-slate-700" htmlFor="password">
+      <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300" htmlFor="password">
         Password
       </label>
       <input
         autoComplete="current-password"
-        className="mb-4 h-11 w-full rounded-lg border border-slate-200 px-3 text-sm outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-100"
+        className="mb-6 h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-teal-500 dark:focus:bg-slate-900 dark:focus:ring-teal-900/30"
         id="password"
         onChange={(event) => setPassword(event.target.value)}
         required
         type="password"
         value={password}
+        placeholder="••••••••"
       />
 
       {error ? <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{error}</p> : null}
       {notice ? <p className="mb-4 rounded-lg bg-teal-50 px-3 py-2 text-sm font-medium text-teal-700">{notice}</p> : null}
 
       <button
-        className="mb-3 flex h-11 w-full items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mb-4 flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm transition-all hover:bg-slate-50 focus:ring-4 focus:ring-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:focus:ring-slate-800"
         disabled={!isConfigured || isSubmitting}
         onClick={handleGoogleLogin}
         type="button"
       >
-        <span className="flex size-5 items-center justify-center rounded-full border border-slate-200 text-xs font-black text-slate-700">G</span>
+        <span className="flex size-6 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-700 dark:bg-slate-700 dark:text-slate-300">G</span>
         Continue with Google
       </button>
 
-      <div className="mb-3 flex items-center gap-3">
-        <div className="h-px flex-1 bg-slate-200" />
-        <span className="text-xs font-bold uppercase text-slate-400">or</span>
-        <div className="h-px flex-1 bg-slate-200" />
+      <div className="mb-4 flex items-center gap-3 opacity-60">
+        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">or</span>
+        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
       </div>
 
-      <Button className="w-full" disabled={!isConfigured || isSubmitting} type="submit">
-        Sign in
+      <Button className="h-12 w-full rounded-xl text-sm" disabled={!isConfigured || isSubmitting} type="submit">
+        <LockKeyhole size={18} className="mr-2" />
+        Sign In to Workspace
       </Button>
 
       <button
