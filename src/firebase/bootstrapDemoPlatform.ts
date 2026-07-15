@@ -47,8 +47,8 @@ export async function bootstrapDemoPlatformInFirestore(opts?: {
     loginCredentials: getDemoLoginCredentials({
       superAdminEmail: opts?.superAdminEmail,
       schoolTenantIds: {
-        greenfield: result.schoolTenantIds[0],
-        riverside: result.schoolTenantIds[1],
+        brightfutures: result.schoolTenantIds[0],
+        ubuntu: result.schoolTenantIds[1],
       },
     }),
   };

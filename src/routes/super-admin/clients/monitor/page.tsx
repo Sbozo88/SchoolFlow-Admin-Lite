@@ -65,7 +65,7 @@ export default function ClientMonitorPage() {
           className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-bold text-white"
           onClick={() => {
             startImpersonation(tenant.id, "read");
-            window.location.href = `/admin?tenantId=${encodeURIComponent(tenant.id)}`;
+            window.location.href = `/school?tenantId=${encodeURIComponent(tenant.id)}`;
           }}
         >
           Open client workspace (impersonate)

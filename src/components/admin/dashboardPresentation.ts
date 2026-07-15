@@ -25,20 +25,20 @@ export type SchoolNavItem = {
 };
 
 export const SCHOOL_PRIMARY_NAV: SchoolNavItem[] = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Learners", href: "/admin/learners", icon: Users },
-  { label: "Attendance", href: "/admin/attendance", icon: CheckSquare },
-  { label: "Payments", href: "/admin/payments", icon: CreditCard },
-  { label: "Parent Follow-Ups", href: "/admin/parent-follow-ups", icon: PhoneForwarded },
-  { label: "Reports", href: "/admin/reports", icon: BarChart3 },
-  { label: "Parent Form", href: "/admin/parent-form", icon: ClipboardList },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
+  { label: "Dashboard", href: "/school", icon: LayoutDashboard },
+  { label: "Learners", href: "/school/learners", icon: Users },
+  { label: "Attendance", href: "/school/attendance", icon: CheckSquare },
+  { label: "Payments", href: "/school/payments", icon: CreditCard },
+  { label: "Parent Follow-Ups", href: "/school/parent-follow-ups", icon: PhoneForwarded },
+  { label: "Reports", href: "/school/reports", icon: BarChart3 },
+  { label: "Parent Form", href: "/school/parent-form", icon: ClipboardList },
+  { label: "Settings", href: "/school/settings", icon: Settings },
 ];
 
 export const SCHOOL_SUPPORT_NAV: SchoolNavItem[] = [
-  { label: "Setup Sprint", href: "/admin/setup-sprint", icon: Activity },
-  { label: "Handover", href: "/admin/handover", icon: FileText },
-  { label: "Monthly Support", href: "/admin/monthly-support", icon: LifeBuoy },
+  { label: "Setup Sprint", href: "/school/setup-sprint", icon: Activity },
+  { label: "Handover", href: "/school/handover", icon: FileText },
+  { label: "Monthly Support", href: "/school/monthly-support", icon: LifeBuoy },
 ];
 
 export const SCHOOL_KPI_LABELS = [
@@ -63,42 +63,42 @@ export const SCHOOL_QUICK_ACTIONS: SchoolQuickAction[] = [
   {
     label: "Add Learner",
     icon: Plus,
-    href: "/admin/learners",
+    href: "/school/learners",
     gradient: "from-[#6c5ce7] to-[#a29bfe]",
     shadow: "shadow-[0_4px_15px_rgba(108,92,231,0.3)]",
   },
   {
     label: "Mark Attendance",
     icon: CheckSquare,
-    href: "/admin/attendance",
+    href: "/school/attendance",
     gradient: "from-[#00d2d3] to-[#01a3a4]",
     shadow: "shadow-[0_4px_15px_rgba(0,210,211,0.3)]",
   },
   {
     label: "Record Payment",
     icon: CreditCard,
-    href: "/admin/payments",
+    href: "/school/payments",
     gradient: "from-[#feca57] to-[#f0932b]",
     shadow: "shadow-[0_4px_15px_rgba(254,202,87,0.3)]",
   },
   {
     label: "Create Follow-Up",
     icon: PhoneForwarded,
-    href: "/admin/parent-follow-ups",
+    href: "/school/parent-follow-ups",
     gradient: "from-[#ff6b81] to-[#ee5a24]",
     shadow: "shadow-[0_4px_15px_rgba(255,107,129,0.3)]",
   },
   {
     label: "Generate Report",
     icon: FileText,
-    href: "/admin/reports",
+    href: "/school/reports",
     gradient: "from-[#1dd1a1] to-[#10ac84]",
     shadow: "shadow-[0_4px_15px_rgba(29,209,161,0.3)]",
   },
   {
     label: "Review Forms",
     icon: ClipboardList,
-    href: "/admin/parent-form",
+    href: "/school/parent-form",
     gradient: "from-[#a29bfe] to-[#6c5ce7]",
     shadow: "shadow-[0_4px_15px_rgba(162,155,254,0.3)]",
   },

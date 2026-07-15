@@ -2,11 +2,11 @@ export const DEMO_PASSWORD = "DemoSchool123!";
 
 export const DEMO_SCHOOLS = [
   {
-    key: "greenfield",
-    tenantId: "tenant-demo-greenfield",
-    name: "Greenfield Music School",
-    email: "admin@greenfield-music.demo",
-    adminName: "Greenfield School Admin",
+    key: "brightfutures",
+    tenantId: "tenant-demo-brightfutures",
+    name: "Bright Futures Academy",
+    email: "admin@brightfutures.demo",
+    adminName: "Bright Futures Admin",
     planId: "plan-growth",
     activities: ["Piano", "Guitar", "Violin", "Drums", "Choir", "Music Theory"],
     learnerNames: [
@@ -19,11 +19,11 @@ export const DEMO_SCHOOLS = [
     ],
   },
   {
-    key: "riverside",
-    tenantId: "tenant-demo-riverside",
-    name: "Riverside Arts Academy",
-    email: "admin@riverside-arts.demo",
-    adminName: "Riverside Academy Admin",
+    key: "ubuntu",
+    tenantId: "tenant-demo-ubuntu",
+    name: "Ubuntu Excellence College",
+    email: "admin@ubuntu.demo",
+    adminName: "Ubuntu Admin",
     planId: "plan-starter",
     activities: ["Drama", "Fine Art", "Dance", "Choir", "Photography", "Ceramics"],
     learnerNames: [
@@ -74,7 +74,7 @@ export function buildSchoolDocuments(school) {
     subscriptionExpiresAt: "2027-07-15T00:00:00.000Z",
     trialEndsAt: null,
     adminEmail: school.email,
-    storageUsedBytes: school.key === "greenfield" ? 724775731 : 391118028,
+    storageUsedBytes: school.key === "brightfutures" ? 724775731 : 391118028,
     storageQuotaBytes: 5368709120,
     notes: "Managed demonstration tenant",
     demo: true,
@@ -85,7 +85,7 @@ export function buildSchoolDocuments(school) {
     currency: "ZAR",
     timezone: "Africa/Johannesburg",
     programmes: school.activities,
-    defaultMonthlyFee: school.key === "greenfield" ? 850 : 780,
+    defaultMonthlyFee: school.key === "brightfutures" ? 850 : 780,
     enrollmentFormEnabled: true,
     demo: true,
   }));
@@ -110,7 +110,7 @@ export function buildSchoolDocuments(school) {
     className: `Grade ${3 + (index % 4)}`,
     programme: school.activities[index],
     instrumentOrActivity: school.activities[index],
-    parentPhone: `08255${school.key === "greenfield" ? "10" : "20"}${String(index + 1).padStart(2, "0")}`,
+    parentPhone: `08255${school.key === "brightfutures" ? "10" : "20"}${String(index + 1).padStart(2, "0")}`,
     parentEmail: `${parentName.toLowerCase().replace(/\s+/g, ".")}@demo.school`,
     paymentStatus: index < 3 ? "paid" : index < 5 ? "partial" : "unpaid",
     learnerStatus: "active",
@@ -132,7 +132,7 @@ export function buildSchoolDocuments(school) {
   });
 
   learners.forEach((learner, index) => {
-    const expectedAmount = school.key === "greenfield" ? 850 : 780;
+    const expectedAmount = school.key === "brightfutures" ? 850 : 780;
     const paidAmount = index < 3 ? expectedAmount : index < 5 ? Math.round(expectedAmount * 0.55) : 0;
     docs.push(tenantDoc("payments", `${school.key}-payment-${index + 1}`, school.tenantId, {
       id: `${school.key}-payment-${index + 1}`,

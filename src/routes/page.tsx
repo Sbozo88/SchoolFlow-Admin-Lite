@@ -7,7 +7,7 @@ import { BrandedLoading } from "@/components/ui/BrandedLoading";
 
 /**
  * Root entry: send users to the correct workspace (platform vs school),
- * not always /admin (old single-tenant behavior).
+ * not always /school (old single-tenant behavior).
  */
 export default function Home() {
   const { user, loading, isConfigured, homePath, workspace } = useAuth();

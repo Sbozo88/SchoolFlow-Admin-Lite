@@ -146,7 +146,7 @@ describe("RBAC matrix", () => {
     // School client only when tenant-bound
     assert.equal(resolveWorkspace(null, "admin", "tenant-1"), "client");
     assert.equal(homePathForWorkspace("platform"), "/super-admin");
-    assert.equal(homePathForWorkspace("client"), "/admin");
+    assert.equal(homePathForWorkspace("client"), "/school");
   });
 
   it("tenant admin permissions are tenant-scoped catalog", () => {
@@ -337,7 +337,7 @@ describe("admin route live wiring (structural)", () => {
 });
 
 describe("impersonation gate (shipped workspaceAccess)", () => {
-  it("platform user may stay on /admin only while impersonating", async () => {
+  it("platform user may stay on /school only while impersonating", async () => {
     const {
       canStayOnClientWorkspace,
       shouldRedirectPlatformUserFromAdmin,
@@ -499,11 +499,11 @@ describe("school client dashboard presentation (UI reference)", () => {
       "Follow-Ups",
       "New Forms",
     ]);
-    assert.ok(schoolQuickActionHrefs().every((href) => href.startsWith("/admin")));
+    assert.ok(schoolQuickActionHrefs().every((href) => href.startsWith("/school")));
     assert.equal(SCHOOL_QUICK_ACTIONS[0].label, "Add Learner");
     assert.equal(SCHOOL_QUICK_ACTIONS[1].label, "Mark Attendance");
     assert.equal(SCHOOL_QUICK_ACTIONS[2].label, "Record Payment");
-    assert.equal(SCHOOL_PRIMARY_NAV[0].href, "/admin");
+    assert.equal(SCHOOL_PRIMARY_NAV[0].href, "/school");
     assert.equal(SCHOOL_UPCOMING_EVENTS.length, 3);
     assert.equal(SCHOOL_UPCOMING_EVENTS[0].name, "Staff Meeting");
   });
@@ -626,8 +626,8 @@ describe("demo platform bootstrap (Super Admin + two schools)", () => {
     const idA = bootstrap.schools[0].provision.tenantId;
     const idB = bootstrap.schools[1].provision.tenantId;
     assert.notEqual(idA, idB);
-    assert.equal(idA, "tenant-demo-greenfield");
-    assert.equal(idB, "tenant-demo-riverside");
+    assert.equal(idA, "tenant-demo-brightfutures");
+    assert.equal(idB, "tenant-demo-ubuntu");
 
     assertDemoPlatformIsolation(bootstrap);
 
@@ -651,7 +651,7 @@ describe("demo platform bootstrap (Super Admin + two schools)", () => {
     // Direct builder also stamps via stampTenantCreate
     const extra = buildSchoolDemoData(idA, "Greenfield Music School", "user-super-admin-demo", {
       now: () => "2026-07-15T12:00:00.000Z",
-    }, { schoolKey: "greenfield" });
+    }, { schoolKey: "brightfutures" });
     assert.ok(extra.learners.every((l) => l.tenantId === idA && hasRequiredTenantMeta(l)));
 
     // Write-path safety: every provision+demo doc destined for Firestore has no undefined leaves
@@ -746,8 +746,8 @@ describe("demo platform bootstrap (Super Admin + two schools)", () => {
     const creds = getDemoLoginCredentials({
       superAdminEmail: "operator@example.com",
       schoolTenantIds: {
-        greenfield: "tenant-demo-greenfield",
-        riverside: "tenant-demo-riverside",
+        brightfutures: "tenant-demo-brightfutures",
+        ubuntu: "tenant-demo-ubuntu",
       },
     });
 
@@ -778,8 +778,8 @@ describe("demo platform bootstrap (Super Admin + two schools)", () => {
       superAdminDisplayName: "Operator",
       linkedToCurrentAuth: true,
       schoolAdminUids: {
-        greenfield: "uid-greenfield",
-        riverside: "uid-riverside",
+        brightfutures: "uid-brightfutures",
+        ubuntu: "uid-ubuntu",
       },
       nowIso: "2026-07-15T12:00:00.000Z",
     });
@@ -787,7 +787,7 @@ describe("demo platform bootstrap (Super Admin + two schools)", () => {
     assert.equal(bootstrap.superAdmin.id, "firebase-uid-abc");
     assert.equal(bootstrap.superAdmin.email, "operator@example.com");
     assert.equal(bootstrap.superAdmin.linkedToCurrentAuth, true);
-    assert.equal(bootstrap.schools[0].provision.adminProfile.id, "uid-greenfield");
-    assert.equal(bootstrap.schools[1].provision.adminProfile.id, "uid-riverside");
+    assert.equal(bootstrap.schools[0].provision.adminProfile.id, "uid-brightfutures");
+    assert.equal(bootstrap.schools[1].provision.adminProfile.id, "uid-ubuntu");
   });
 });

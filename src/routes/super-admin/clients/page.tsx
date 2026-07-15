@@ -190,7 +190,7 @@ export default function SuperAdminClientsPage() {
                         className="rounded bg-teal-50 px-2 py-1 text-[11px] font-bold text-teal-800 dark:bg-teal-500/10 dark:text-teal-400"
                         onClick={() => {
                           startImpersonation(t.id, "read");
-                          window.location.href = `/admin?tenantId=${encodeURIComponent(t.id)}`;
+                          window.location.href = `/school?tenantId=${encodeURIComponent(t.id)}`;
                         }}
                       >
                         Impersonate

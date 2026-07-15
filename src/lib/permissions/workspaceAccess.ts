@@ -1,7 +1,7 @@
 import { canAccessClientWorkspace, type PlatformRole, type TenantRole } from "@/lib/permissions/roles";
 
 /**
- * Pure gate used by ProtectedRoute for the school client workspace (/admin).
+ * Pure gate used by ProtectedRoute for the school client workspace (/school).
  * Super Admin must NOT pass this unless impersonating a tenant.
  */
 export function canStayOnClientWorkspace(input: {
@@ -27,7 +27,7 @@ export function canStayOnClientWorkspace(input: {
 }
 
 /**
- * Redirect away from school /admin to Super Admin when the user is not a school member
+ * Redirect away from school /school to Super Admin when the user is not a school member
  * and not actively impersonating.
  */
 export function shouldRedirectPlatformUserFromAdmin(input: {

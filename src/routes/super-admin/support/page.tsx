@@ -64,7 +64,7 @@ export default function SuperAdminSupportPage() {
                 className="h-8 text-xs"
                 onClick={() => {
                   startImpersonation(t.id, "read");
-                  window.location.href = `/admin?tenantId=${encodeURIComponent(t.id)}`;
+                  window.location.href = `/school?tenantId=${encodeURIComponent(t.id)}`;
                 }}
               >
                 Open workspace

@@ -20,7 +20,7 @@ export function ProtectedRoute({
   allowedPlatformRoles,
 }: {
   children: ReactNode;
-  /** client = school-ops /admin; platform = super-admin portal */
+  /** client = school-ops /school; platform = super-admin portal */
   workspace?: "client" | "platform";
   allowedPlatformRoles?: PlatformRole[];
 }) {
@@ -52,7 +52,7 @@ export function ProtectedRoute({
     if (loading || !user) return;
     if (
       workspace === "client" &&
-      pathname?.startsWith("/admin") &&
+      (pathname?.startsWith("/school") || pathname?.startsWith("/demo")) &&
       shouldRedirectPlatformUserFromAdmin({
         platformRole,
         homeTenantId: tenantId,
@@ -71,7 +71,7 @@ export function ProtectedRoute({
         tenantRole,
       })
     ) {
-      navigate("/admin", { replace: true });
+      navigate("/school", { replace: true });
     }
   }, [
     isImpersonating,

@@ -24,6 +24,7 @@ export function LoginForm() {
     isConfigured,
     homePath,
     workspace,
+    tenantId,
   } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -37,14 +38,19 @@ export function LoginForm() {
   useEffect(() => {
     if (!loading && user && workspace !== "none") {
       const destination = safeNextPath(requestedNext, homePath);
-      // Platform users landing on /admin without tenant are sent to super-admin unless next is super-admin
-      if (workspace === "platform" && destination.startsWith("/admin") && !destination.startsWith("/super-admin")) {
+      // Platform users landing on /school without tenant are sent to super-admin unless next is super-admin
+      if (workspace === "platform" && destination.startsWith("/school") && !destination.startsWith("/super-admin")) {
         navigate(homePath, { replace: true });
       } else {
-        navigate(destination, { replace: true });
+        // Send users of demo tenants to the public demo workspace instead of the standard school workspace
+        let finalDestination = destination;
+        if (tenantId?.startsWith("tenant-demo-") && destination.startsWith("/school")) {
+          finalDestination = destination.replace("/school", "/demo");
+        }
+        navigate(finalDestination, { replace: true });
       }
     }
-  }, [homePath, loading, navigate, requestedNext, user, workspace]);
+  }, [homePath, loading, navigate, requestedNext, user, workspace, tenantId]);
 
   if (isSubmitting || loading) {
     return (

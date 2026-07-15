@@ -10,7 +10,7 @@ import {
   SCHOOL_SUPPORT_NAV,
 } from "@/components/admin/dashboardPresentation";
 
-export function AdminLayout({
+export function SchoolLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -22,7 +22,7 @@ export function AdminLayout({
   let activeItem = "Dashboard";
   const allNavItems = [...SCHOOL_PRIMARY_NAV, ...SCHOOL_SUPPORT_NAV];
   const matchedNav = allNavItems.slice().reverse().find((item) => {
-    if (item.href === "/admin") return pathname === "/admin" || pathname === "/admin/";
+    if (item.href === "/school") return pathname === "/school" || pathname === "/school/";
     return pathname?.startsWith(item.href);
   });
   if (matchedNav) {

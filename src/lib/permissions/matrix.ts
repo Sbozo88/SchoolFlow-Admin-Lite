@@ -149,6 +149,6 @@ export function resolveWorkspace(
 
 export function homePathForWorkspace(workspace: "platform" | "client" | "none"): string {
   if (workspace === "platform") return "/super-admin";
-  if (workspace === "client") return "/admin";
+  if (workspace === "client") return "/school";
   return "/login";
 }
