@@ -509,6 +509,80 @@ describe("school client dashboard presentation (UI reference)", () => {
   });
 });
 
+describe("Super Admin dashboard metrics", () => {
+  it("derives revenue, storage, plan mix, and client health from tenant records", async () => {
+    const { buildPlatformDashboardMetrics, formatBytes, getTenantHealth } = await import(
+      "@/lib/platform/dashboard"
+    );
+    const base = {
+      slug: "school",
+      createdBy: "platform",
+      createdAt: "now",
+      updatedAt: "now",
+      trialEndsAt: null,
+      subscriptionExpiresAt: null,
+      notes: "",
+    };
+    const tenants = [
+      {
+        ...base,
+        id: "t1",
+        tenantId: "t1",
+        name: "Healthy School",
+        status: "active" as const,
+        planId: "plan-growth",
+        subscriptionStatus: "active" as const,
+        adminEmail: "admin@healthy.test",
+        storageUsedBytes: 1024,
+        storageQuotaBytes: 4096,
+      },
+      {
+        ...base,
+        id: "t2",
+        tenantId: "t2",
+        name: "Past Due School",
+        status: "active" as const,
+        planId: "plan-enterprise",
+        subscriptionStatus: "past_due" as const,
+        adminEmail: "admin@pastdue.test",
+        storageUsedBytes: 2048,
+        storageQuotaBytes: 4096,
+      },
+    ];
+    const metrics = buildPlatformDashboardMetrics(tenants);
+    assert.equal(metrics.monthlyRecurringRevenue, 499);
+    assert.equal(metrics.storageUtilization, 38);
+    assert.equal(metrics.healthyTenants, 1);
+    assert.equal(metrics.attentionTenants, 1);
+    assert.equal(metrics.portfolioHealth, 50);
+    assert.equal(metrics.plans.find((plan) => plan.id === "plan-growth")?.clients, 1);
+    assert.equal(getTenantHealth(tenants[1]), "attention");
+    assert.equal(formatBytes(1024), "1.0 KB");
+  });
+
+  it("ships the enhanced platform command-center sections and responsive shell", () => {
+    const dashboard = readFileSync(join(process.cwd(), "src/routes/super-admin/page.tsx"), "utf8");
+    const shell = readFileSync(join(process.cwd(), "src/components/layout/SuperAdminLayout.tsx"), "utf8");
+    for (const label of [
+      "Total schools",
+      "Monthly revenue",
+      "Portfolio health",
+      "Plan performance",
+      "Subscription mix",
+      "School health",
+      "Quick operations",
+      "Demo access & bootstrap",
+      "Export portfolio",
+    ]) {
+      assert.match(dashboard, new RegExp(label.replace(/[&]/g, "\\&")), label);
+    }
+    assert.match(shell, /Search platform areas/);
+    assert.match(shell, /Open navigation/);
+    assert.match(shell, /Review audit trail/);
+    assert.match(shell, /bg-\[#0b0b0d\]/);
+  });
+});
+
 describe("demo platform bootstrap (Super Admin + two schools)", () => {
   it("builds platform-only Super Admin and two distinct school tenants with stamped demo data", async () => {
     const {
