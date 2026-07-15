@@ -139,6 +139,12 @@ describe("RBAC matrix", () => {
   it("workspace routing", () => {
     assert.equal(resolveWorkspace("super_admin", null, null), "platform");
     assert.equal(resolveWorkspace(null, "client_admin", "tenant-1"), "client");
+    // Bare legacy admin WITHOUT tenantId is Super Admin / platform — not school dashboard
+    assert.equal(resolveWorkspace(null, "admin", null), "platform");
+    assert.equal(resolveWorkspace(null, "admin", ""), "platform");
+    assert.equal(resolveWorkspace(null, null, null), "platform");
+    // School client only when tenant-bound
+    assert.equal(resolveWorkspace(null, "admin", "tenant-1"), "client");
     assert.equal(homePathForWorkspace("platform"), "/super-admin");
     assert.equal(homePathForWorkspace("client"), "/admin");
   });
@@ -332,9 +338,11 @@ describe("admin route live wiring (structural)", () => {
 
 describe("impersonation gate (shipped workspaceAccess)", () => {
   it("platform user may stay on /admin only while impersonating", async () => {
-    const { canStayOnClientWorkspace, shouldRedirectPlatformUserFromAdmin } = await import(
-      "@/lib/permissions/workspaceAccess"
-    );
+    const {
+      canStayOnClientWorkspace,
+      shouldRedirectPlatformUserFromAdmin,
+      canAccessPlatformWorkspace,
+    } = await import("@/lib/permissions/workspaceAccess");
     assert.equal(
       canStayOnClientWorkspace({
         role: null,
@@ -355,6 +363,26 @@ describe("impersonation gate (shipped workspaceAccess)", () => {
       }),
       true,
     );
+    // Bare legacy "admin" without tenant must NOT use school dashboard
+    assert.equal(
+      canStayOnClientWorkspace({
+        role: "admin",
+        platformRole: null,
+        tenantRole: "admin",
+        homeTenantId: null,
+        isImpersonating: false,
+      }),
+      false,
+    );
+    assert.equal(
+      shouldRedirectPlatformUserFromAdmin({
+        platformRole: null,
+        homeTenantId: null,
+        tenantRole: "admin",
+        isImpersonating: false,
+      }),
+      true,
+    );
     assert.equal(
       shouldRedirectPlatformUserFromAdmin({
         platformRole: "super_admin",
@@ -372,6 +400,24 @@ describe("impersonation gate (shipped workspaceAccess)", () => {
         isImpersonating: false,
       }),
       true,
+    );
+    // Unbound operators can open Super Admin (bootstrap)
+    assert.equal(
+      canAccessPlatformWorkspace({
+        platformRole: null,
+        homeTenantId: null,
+        tenantRole: "admin",
+      }),
+      true,
+    );
+    // School-bound users cannot open Super Admin
+    assert.equal(
+      canAccessPlatformWorkspace({
+        platformRole: null,
+        homeTenantId: "tenant-1",
+        tenantRole: "client_admin",
+      }),
+      false,
     );
   });
 });

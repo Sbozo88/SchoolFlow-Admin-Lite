@@ -1,6 +1,9 @@
 import { canAccessClientWorkspace, type PlatformRole, type TenantRole } from "@/lib/permissions/roles";
 
-/** Pure gate used by ProtectedRoute — unit tests drive this shipped function. */
+/**
+ * Pure gate used by ProtectedRoute for the school client workspace (/admin).
+ * Super Admin must NOT pass this unless impersonating a tenant.
+ */
 export function canStayOnClientWorkspace(input: {
   role: "admin" | null;
   platformRole: PlatformRole | null;
@@ -8,22 +11,46 @@ export function canStayOnClientWorkspace(input: {
   homeTenantId: string | null;
   isImpersonating: boolean;
 }): boolean {
+  // Support impersonation into a school
+  if (input.platformRole && input.isImpersonating) return true;
+
+  // School users must be bound to a tenant
+  if (!input.homeTenantId) return false;
+
   if (input.role === "admin") return true;
   if (canAccessClientWorkspace(input.tenantRole)) return true;
-  if (input.platformRole && input.isImpersonating) return true;
+
+  // Platform user who also has a home tenant (unusual) can open client workspace
   if (input.platformRole && input.homeTenantId) return true;
+
   return false;
 }
 
-/** Platform users without tenant membership should leave /admin unless impersonating. */
+/**
+ * Redirect away from school /admin to Super Admin when the user is not a school member
+ * and not actively impersonating.
+ */
 export function shouldRedirectPlatformUserFromAdmin(input: {
   platformRole: PlatformRole | null;
   homeTenantId: string | null;
   tenantRole: TenantRole | null;
   isImpersonating: boolean;
 }): boolean {
-  if (!input.platformRole) return false;
-  if (input.homeTenantId || input.tenantRole) return false;
   if (input.isImpersonating) return false;
+  // Bound to a school → stay on client workspace
+  if (input.homeTenantId) return false;
+  // Unbound (platform Super Admin, or legacy admin without tenant) → Super Admin UI
   return true;
+}
+
+/** Who may enter /super-admin */
+export function canAccessPlatformWorkspace(input: {
+  platformRole: PlatformRole | null;
+  homeTenantId: string | null;
+  tenantRole: TenantRole | null;
+}): boolean {
+  if (input.platformRole) return true;
+  // Unbound signed-in operators can open Super Admin to run bootstrap
+  if (!input.homeTenantId) return true;
+  return false;
 }

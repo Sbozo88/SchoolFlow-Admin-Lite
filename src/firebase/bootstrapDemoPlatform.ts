@@ -120,14 +120,19 @@ export async function persistDemoPlatformBootstrap(
   const batch = writeBatch(db);
 
   const superAdminId = opts.linkAuthUid ?? bootstrap.superAdmin.id;
+  // Super Admin must never keep a school role/tenant — forces platform workspace after load
   batch.set(
     doc(db, "users", superAdminId),
     stripUndefinedDeep({
-      ...bootstrap.superAdmin,
+      email: bootstrap.superAdmin.email,
+      displayName: bootstrap.superAdmin.displayName,
+      organizationName: "SchoolFlow Platform",
+      status: "active",
       id: superAdminId,
       platformRole: "super_admin",
       role: null,
       tenantId: null,
+      isPlatformOnly: true,
       updatedAt: serverTimestamp(),
       createdAt: serverTimestamp(),
       createdBy: opts.actorUserId,

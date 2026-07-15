@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
 import type { PlatformRole } from "@/lib/permissions/roles";
 import {
+  canAccessPlatformWorkspace,
   canStayOnClientWorkspace,
   shouldRedirectPlatformUserFromAdmin,
 } from "@/lib/permissions/workspaceAccess";
@@ -47,7 +48,7 @@ export function ProtectedRoute({
     }
   }, [homePath, isConfigured, loading, pathname, router, user]);
 
-  // Redirect pure platform users away from client workspace UNLESS impersonating a tenant
+  // Super Admin / unbound operators must never stay on the school dashboard
   useEffect(() => {
     if (loading || !user) return;
     if (
@@ -62,7 +63,15 @@ export function ProtectedRoute({
     ) {
       router.replace("/super-admin");
     }
-    if (workspace === "platform" && !platformRole && (role || tenantRole)) {
+    // School-only users (tenant bound, no platform role) cannot open Super Admin
+    if (
+      workspace === "platform" &&
+      !canAccessPlatformWorkspace({
+        platformRole,
+        homeTenantId: tenantId,
+        tenantRole,
+      })
+    ) {
       router.replace("/admin");
     }
   }, [
@@ -98,27 +107,53 @@ export function ProtectedRoute({
   }
 
   if (workspace === "platform") {
-    const allowed = allowedPlatformRoles ?? ["super_admin", "platform_support", "platform_manager"];
-    if (!platformRole || !allowed.includes(platformRole)) {
-      return (
-        <AccessShell
-          action={
-            <Button onClick={logout} type="button" variant="secondary">
-              Sign out
-            </Button>
-          }
-          detail={
-            authError ||
-            "Platform access required. Your account is not a Super Admin or platform staff user."
-          }
-          icon={<ShieldAlert size={24} />}
-          title="Platform access required"
-        />
-      );
+    const allowed =
+      allowedPlatformRoles ?? (["super_admin", "platform_support", "platform_manager"] as PlatformRole[]);
+    const roleAllowed = !platformRole || allowed.includes(platformRole);
+    const access = canAccessPlatformWorkspace({
+      platformRole,
+      homeTenantId: tenantId,
+      tenantRole,
+    });
+
+    if (!access || !roleAllowed) {
+      // School-only tenant users
+      if (tenantId) {
+        return (
+          <AccessShell
+            action={
+              <Button onClick={logout} type="button" variant="secondary">
+                Sign out
+              </Button>
+            }
+            detail="This Super Admin portal is for platform operators. Your account is bound to a school tenant."
+            icon={<ShieldAlert size={24} />}
+            title="Platform access required"
+          />
+        );
+      }
     }
-    return children;
+
+    // Unbound users may enter to bootstrap even without platformRole yet
+    if (access) {
+      return children;
+    }
+
+    return (
+      <AccessShell
+        action={
+          <Button onClick={logout} type="button" variant="secondary">
+            Sign out
+          </Button>
+        }
+        detail={authError || "Platform access required."}
+        icon={<ShieldAlert size={24} />}
+        title="Platform access required"
+      />
+    );
   }
 
+  // School client workspace
   const hasClientAccess = canStayOnClientWorkspace({
     role,
     platformRole,
@@ -138,9 +173,9 @@ export function ProtectedRoute({
     ) {
       return (
         <BrandedLoading
-          detail="Opening Super Admin workspace."
+          detail="Opening Super Admin workspace (school dashboard is for client schools only)."
           fullScreen
-          title="Redirecting"
+          title="Redirecting to Super Admin"
         />
       );
     }
@@ -153,10 +188,10 @@ export function ProtectedRoute({
         }
         detail={
           authError ||
-          "Your account is signed in, but it does not have access to this client workspace."
+          "Your account is not linked to a school tenant. Super Admins should use /super-admin."
         }
         icon={<ShieldAlert size={24} />}
-        title="Admin access required"
+        title="School access required"
       />
     );
   }

@@ -132,10 +132,18 @@ export function resolveWorkspace(
   tenantRole: TenantRole | null | undefined,
   tenantId: string | null | undefined,
 ): "platform" | "client" | "none" {
+  // Platform Super Admin / staff always use the Super Admin workspace
   if (platformRole) return "platform";
-  if (tenantRole && tenantId) return "client";
-  // Legacy admin without platformRole still maps to client if role is admin
-  if (tenantRole === "admin" || tenantRole === "client_admin") return "client";
+
+  // School client workspace requires a tenant binding (never bare role alone)
+  if (tenantId && tenantRole) return "client";
+
+  // Unbound operators (no tenantId): Super Admin / bootstrap — NOT the school dashboard.
+  // Fixes legacy profiles with role "admin" but no tenantId landing on empty school UI.
+  if (!tenantId) {
+    return "platform";
+  }
+
   return "none";
 }
 
