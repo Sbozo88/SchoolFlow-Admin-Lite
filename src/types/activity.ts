@@ -12,5 +12,5 @@ export type RecentActivity = {
   title: string;
   description: string;
   link?: string;
-  timestamp: Date;
+  timestamp: string;
 };

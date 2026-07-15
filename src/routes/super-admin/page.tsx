@@ -310,7 +310,7 @@ export default function SuperAdminDashboardPage() {
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm font-bold text-slate-900 dark:text-white/80">Demo schools</p>
-              <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 dark:text-white/32">Creates or repairs Greenfield Music School and Riverside Arts Academy with separate Auth users and tenant-scoped demo records.</p>
+              <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-500 dark:text-white/32">Creates or repairs Bright Futures Academy and Ubuntu Excellence College with separate Auth users and tenant-scoped demo records.</p>
             </div>
             <button className="inline-flex h-10 items-center gap-2 rounded-xl bg-slate-900 px-4 text-xs font-black text-white transition hover:bg-slate-800 disabled:opacity-50 dark:bg-white dark:text-slate-950 dark:hover:bg-violet-100" disabled={busy || !user} onClick={() => void handleLoadDemoPlatform()} type="button">
               <RefreshCw className={busy ? "animate-spin" : ""} size={15} /> {busy ? "Loading demo…" : "Load demo platform"}

@@ -4,7 +4,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { DemoLayout } from "@/components/layout/DemoLayout";
 import { SchoolLayout } from "@/components/layout/SchoolLayout";
 import { SuperAdminLayout } from "@/components/layout/SuperAdminLayout";
-import { MockDataProvider } from "@/components/providers/MockDataProvider";
+
 import { ImpersonationBanner } from "@/components/tenant/ImpersonationBanner";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
 
@@ -35,12 +35,10 @@ const Audit = lazy(() => import("@/routes/super-admin/audit/page"));
 function SchoolWorkspace() {
   return (
     <ProtectedRoute workspace="client">
-      <MockDataProvider>
-        <SchoolLayout>
-          <ImpersonationBanner />
-          <Outlet />
-        </SchoolLayout>
-      </MockDataProvider>
+      <SchoolLayout>
+        <ImpersonationBanner />
+        <Outlet />
+      </SchoolLayout>
     </ProtectedRoute>
   );
 }
@@ -48,12 +46,10 @@ function SchoolWorkspace() {
 function DemoWorkspace() {
   return (
     <ProtectedRoute workspace="client">
-      <MockDataProvider>
-        <DemoLayout>
-          <ImpersonationBanner />
-          <Outlet />
-        </DemoLayout>
-      </MockDataProvider>
+      <DemoLayout>
+        <ImpersonationBanner />
+        <Outlet />
+      </DemoLayout>
     </ProtectedRoute>
   );
 }

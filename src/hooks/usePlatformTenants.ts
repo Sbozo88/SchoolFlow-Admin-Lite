@@ -29,6 +29,16 @@ export function usePlatformTenants() {
 
   useEffect(() => {
     if (!isConfigured) return undefined;
+    
+    // Do not attempt to query if the user does not have a platform role yet.
+    // This prevents permission denied errors for brand new accounts before they bootstrap.
+    if (!platformRole) {
+      setTenants([]);
+      setSyncState("Waiting for setup");
+      setErrorMessage("");
+      return undefined;
+    }
+
     const q = query(collection(getFirebaseDb(), "tenants"), orderBy("name", "asc"));
     return onSnapshot(
       q,

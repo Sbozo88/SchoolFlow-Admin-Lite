@@ -1,5 +1,5 @@
-import { LoginPage } from "@/views/admin/LoginPage";
+import { LoginPage } from "@/features/auth/pages/LoginPage";
 
-export default function LoginRoute() {
+export default function Page() {
   return <LoginPage />;
 }

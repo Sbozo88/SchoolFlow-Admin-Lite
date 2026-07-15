@@ -5,11 +5,11 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { useMockData } from "@/components/providers/MockDataProvider";
+import { useHandoverTasks } from "@/hooks/useHandoverTasks";
 import { FileText, Download, CheckCircle, Clock, CheckCircle2, ChevronRight, FolderLock, Check } from "lucide-react";
 
 export default function HandoverPage() {
-  const { handovers, toggleHandoverTask } = useMockData();
+  const { records: handovers, toggleHandoverTask } = useHandoverTasks();
   const [selectedTerm, setSelectedTerm] = useState("Term 2");
 
   const terms = ["Term 1", "Term 2", "Term 3", "Term 4"];

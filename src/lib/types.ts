@@ -12,8 +12,8 @@ export type AdminUserProfile = {
   tenantId?: string | null;
 };
 
-export type { AttendanceRecord } from "@/types/attendance";
-export type { Learner } from "@/types/learner";
-export type { ParentSubmission } from "@/types/parentSubmission";
-export type { PaymentRecord as Payment } from "@/types/payment";
+export type { AttendanceRecord } from "@/features/attendance/types";
+export type { Learner } from "@/features/learners/types";
+export type { ParentSubmissionRecord as ParentSubmission } from "@/features/parents/types";
+export type { PaymentRecord as Payment } from "@/features/payments/types";
 export type { RecentActivity } from "@/types/activity";

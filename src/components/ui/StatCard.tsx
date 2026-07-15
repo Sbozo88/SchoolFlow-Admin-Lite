@@ -1,27 +1,34 @@
-import type { ReactNode } from "react";
-import { Card } from "@/components/ui/Card";
+import { LucideIcon } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
-export function StatCard({
-  label,
-  value,
-  detail,
-  icon,
-}: {
+type StatCardProps = {
   label: string;
-  value: string;
-  detail?: string;
-  icon?: ReactNode;
-}) {
+  value: string | number;
+  icon: LucideIcon;
+  gradient: string;
+  trend: "up" | "down";
+  change: string;
+};
+
+export function StatCard({ label, value, icon: Icon, gradient, trend, change }: StatCardProps) {
   return (
-    <Card className="p-5">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-bold text-slate-500 dark:text-slate-400">{label}</p>
-          <p className="mt-2 text-3xl font-black text-slate-950 dark:text-white">{value}</p>
-          {detail ? <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{detail}</p> : null}
+    <div
+      className={`relative flex min-h-[138px] flex-col justify-between overflow-hidden rounded-[26px] bg-gradient-to-br ${gradient} p-5 shadow-[0_10px_28px_rgba(72,52,212,0.14)] transition-transform duration-300 hover:scale-[1.02] sm:p-6`}
+    >
+      <div className="mb-3 flex items-start justify-between">
+        <div className="flex size-11 items-center justify-center rounded-2xl bg-white/20 backdrop-blur-sm">
+          <Icon size={20} className="text-white" />
         </div>
-        {icon ? <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-200">{icon}</div> : null}
+        <div className="flex items-center gap-0.5 rounded-full bg-white/20 px-2.5 py-1 text-[12px] font-bold text-white">
+          {trend === "up" ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+          {change}
+        </div>
       </div>
-    </Card>
+      <div>
+        <p className="mb-1 text-[13px] font-medium text-white/75">{label}</p>
+        <p className="text-[32px] font-bold leading-none tracking-tight text-white">{value}</p>
+      </div>
+      <div className="absolute -bottom-8 -right-8 size-28 rounded-full bg-white/[0.08]" />
+    </div>
   );
 }

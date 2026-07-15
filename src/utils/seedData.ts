@@ -1,7 +1,7 @@
-import type { AttendanceRecord } from "@/types/attendance";
-import type { Learner } from "@/types/learner";
-import type { PaymentRecord } from "@/types/payment";
-import type { ParentSubmission } from "@/types/parentSubmission";
+import type { AttendanceRecord } from "@/features/attendance/types";
+import type { Learner } from "@/features/learners/types";
+import type { PaymentRecord } from "@/features/payments/types";
+import type { ParentSubmissionRecord as ParentSubmission } from "@/features/parents/types";
 import type { RecentActivity } from "@/types/activity";
 
 export const demoLearners: Learner[] = [
@@ -18,8 +18,8 @@ export const demoLearners: Learner[] = [
     paymentStatus: "paid",
     learnerStatus: "active",
     notes: "Prefers Monday afternoon lessons.",
-    createdAt: new Date("2026-05-01T08:00:00+02:00"),
-    updatedAt: new Date("2026-05-24T10:30:00+02:00"),
+    createdAt: new Date("2026-05-01T08:00:00+02:00").toISOString(),
+    updatedAt: new Date("2026-05-24T10:30:00+02:00").toISOString(),
   },
   {
     id: "learner-2",
@@ -34,8 +34,8 @@ export const demoLearners: Learner[] = [
     paymentStatus: "partial",
     learnerStatus: "active",
     notes: "Needs invoice follow-up before month end.",
-    createdAt: new Date("2026-05-03T09:15:00+02:00"),
-    updatedAt: new Date("2026-05-25T12:00:00+02:00"),
+    createdAt: new Date("2026-05-03T09:15:00+02:00").toISOString(),
+    updatedAt: new Date("2026-05-25T12:00:00+02:00").toISOString(),
   },
   {
     id: "learner-3",
@@ -50,8 +50,8 @@ export const demoLearners: Learner[] = [
     paymentStatus: "unpaid",
     learnerStatus: "pending",
     notes: "Trial learner awaiting placement confirmation.",
-    createdAt: new Date("2026-05-08T14:00:00+02:00"),
-    updatedAt: new Date("2026-05-26T09:45:00+02:00"),
+    createdAt: new Date("2026-05-08T14:00:00+02:00").toISOString(),
+    updatedAt: new Date("2026-05-26T09:45:00+02:00").toISOString(),
   },
   {
     id: "learner-4",
@@ -66,8 +66,8 @@ export const demoLearners: Learner[] = [
     paymentStatus: "overdue",
     learnerStatus: "active",
     notes: "Do not schedule extra sessions until payment is resolved.",
-    createdAt: new Date("2026-04-20T11:30:00+02:00"),
-    updatedAt: new Date("2026-05-27T16:20:00+02:00"),
+    createdAt: new Date("2026-04-20T11:30:00+02:00").toISOString(),
+    updatedAt: new Date("2026-05-27T16:20:00+02:00").toISOString(),
   },
   {
     id: "learner-5",
@@ -80,8 +80,8 @@ export const demoLearners: Learner[] = [
     parentPhone: "0835550105",
     paymentStatus: "paid",
     learnerStatus: "active",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "learner-6",
@@ -94,8 +94,8 @@ export const demoLearners: Learner[] = [
     parentPhone: "0815550106",
     paymentStatus: "paid",
     learnerStatus: "active",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "learner-7",
@@ -108,8 +108,8 @@ export const demoLearners: Learner[] = [
     parentPhone: "0825550107",
     paymentStatus: "partial",
     learnerStatus: "active",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "learner-8",
@@ -123,8 +123,8 @@ export const demoLearners: Learner[] = [
     paymentStatus: "unpaid",
     learnerStatus: "inactive",
     notes: "Taking a break this term.",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "learner-9",
@@ -137,8 +137,8 @@ export const demoLearners: Learner[] = [
     parentPhone: "0715550109",
     paymentStatus: "paid",
     learnerStatus: "active",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "learner-10",
@@ -151,8 +151,8 @@ export const demoLearners: Learner[] = [
     parentPhone: "0835550110",
     paymentStatus: "overdue",
     learnerStatus: "active",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "learner-11",
@@ -165,8 +165,8 @@ export const demoLearners: Learner[] = [
     parentPhone: "0825550111",
     paymentStatus: "paid",
     learnerStatus: "active",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "learner-12",
@@ -179,8 +179,8 @@ export const demoLearners: Learner[] = [
     parentPhone: "0815550112",
     paymentStatus: "partial",
     learnerStatus: "active",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "learner-13",
@@ -193,8 +193,8 @@ export const demoLearners: Learner[] = [
     parentPhone: "0845550113",
     paymentStatus: "paid",
     learnerStatus: "active",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "learner-14",
@@ -207,8 +207,8 @@ export const demoLearners: Learner[] = [
     parentPhone: "0825550114",
     paymentStatus: "paid",
     learnerStatus: "active",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "learner-15",
@@ -221,10 +221,10 @@ export const demoLearners: Learner[] = [
     parentPhone: "0715550115",
     paymentStatus: "unpaid",
     learnerStatus: "pending",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
-];
+] as unknown as Learner[];
 
 export const demoAttendance: AttendanceRecord[] = [
   {
@@ -235,8 +235,8 @@ export const demoAttendance: AttendanceRecord[] = [
     programme: "TKM Music Academy",
     date: new Date().toISOString().split("T")[0],
     status: "present",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "attendance-2",
@@ -247,8 +247,8 @@ export const demoAttendance: AttendanceRecord[] = [
     date: new Date().toISOString().split("T")[0],
     status: "late",
     notes: "Arrived 10 minutes late.",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "attendance-3",
@@ -259,8 +259,8 @@ export const demoAttendance: AttendanceRecord[] = [
     date: new Date().toISOString().split("T")[0],
     status: "excused",
     notes: "Parent notified school event clash.",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "attendance-4",
@@ -271,10 +271,10 @@ export const demoAttendance: AttendanceRecord[] = [
     date: new Date().toISOString().split("T")[0],
     status: "absent",
     notes: "Follow up required.",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
-];
+] as unknown as AttendanceRecord[];
 
 export const demoPayments: PaymentRecord[] = [
   {
@@ -287,8 +287,8 @@ export const demoPayments: PaymentRecord[] = [
     balance: 0,
     status: "paid",
     paymentDate: "2026-05-08",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "payment-2",
@@ -299,8 +299,8 @@ export const demoPayments: PaymentRecord[] = [
     paidAmount: 400,
     balance: 450,
     status: "partial",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "payment-3",
@@ -311,8 +311,8 @@ export const demoPayments: PaymentRecord[] = [
     paidAmount: 0,
     balance: 650,
     status: "unpaid",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "payment-4",
@@ -323,10 +323,10 @@ export const demoPayments: PaymentRecord[] = [
     paidAmount: 0,
     balance: 900,
     status: "overdue",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
-];
+] as unknown as PaymentRecord[];
 
 export const demoParentSubmissions: ParentSubmission[] = [
   {
@@ -341,8 +341,8 @@ export const demoParentSubmissions: ParentSubmission[] = [
     parentEmail: "themba@example.com",
     status: "new",
     message: "We would like to start next month if possible.",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   },
   {
     id: "submission-2",
@@ -354,10 +354,10 @@ export const demoParentSubmissions: ParentSubmission[] = [
     parentName: "Susan Viljoen",
     parentPhone: "0829876543",
     status: "reviewed",
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }
-];
+] as unknown as ParentSubmission[];
 
 export const demoRecentActivity: RecentActivity[] = [
   {
@@ -365,23 +365,23 @@ export const demoRecentActivity: RecentActivity[] = [
     type: "learner_added",
     title: "New Learner Added",
     description: "Grace Mokoena was added to TKM Music Academy.",
-    timestamp: new Date(),
+    timestamp: new Date().toISOString(),
   },
   {
     id: "activity-2",
     type: "attendance_marked",
     title: "Attendance Recorded",
     description: "Marked Liam Smith as late for Guitar.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 mins ago
+    timestamp: new Date(Date.now() - 1000 * 60 * 30).toISOString(), // 30 mins ago
   },
   {
     id: "activity-3",
     type: "parent_form_submitted",
     title: "New Parent Submission",
     description: "Themba Mthembu submitted an application for Sipho.",
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
+    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(), // 2 hours ago
   }
-];
+] as unknown as RecentActivity[];
 
 export const emptyLearners = demoLearners;
 export const emptyAttendance = demoAttendance;

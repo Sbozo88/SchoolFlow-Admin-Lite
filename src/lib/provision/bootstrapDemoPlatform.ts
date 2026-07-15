@@ -165,89 +165,83 @@ export function buildSchoolDemoData(
   const key = opts?.schoolKey ?? tenantId.slice(-8);
   const prefix = `${key}`;
 
-  const learnerSpecs = [
-    {
-      id: `${prefix}-learner-1`,
-      firstName: key === "ubuntu" ? "Mia" : "Zara",
-      lastName: key === "ubuntu" ? "Patel" : "Dlamini",
-      className: "Grade 4",
-      programme: schoolName,
-      instrumentOrActivity: key === "ubuntu" ? "Drama" : "Piano",
-      parentName: key === "ubuntu" ? "Anita Patel" : "Thandi Dlamini",
-      parentPhone: key === "ubuntu" ? "0821002001" : "0845550103",
-      parentEmail: key === "ubuntu" ? "anita@ubuntu.demo" : "thandi@brightfutures.demo",
-      paymentStatus: "paid" as const,
-      learnerStatus: "active" as const,
-    },
-    {
-      id: `${prefix}-learner-2`,
-      firstName: key === "ubuntu" ? "Leo" : "Liam",
-      lastName: key === "ubuntu" ? "Botha" : "Smith",
-      className: "Grade 5",
-      programme: schoolName,
-      instrumentOrActivity: key === "ubuntu" ? "Art" : "Guitar",
-      parentName: key === "ubuntu" ? "Karin Botha" : "Sarah Smith",
-      parentPhone: key === "ubuntu" ? "0821002002" : "0835550102",
-      parentEmail: key === "ubuntu" ? "karin@ubuntu.demo" : "sarah@brightfutures.demo",
-      paymentStatus: "partial" as const,
-      learnerStatus: "active" as const,
-    },
-    {
-      id: `${prefix}-learner-3`,
-      firstName: key === "ubuntu" ? "Sienna" : "Amahle",
-      lastName: key === "ubuntu" ? "Naidoo" : "Nkosi",
-      className: "Grade 3",
-      programme: schoolName,
-      instrumentOrActivity: key === "ubuntu" ? "Dance" : "Drums",
-      parentName: key === "ubuntu" ? "Priya Naidoo" : "Bongani Nkosi",
-      parentPhone: key === "ubuntu" ? "0821002003" : "0825550101",
-      parentEmail: key === "ubuntu" ? "priya@ubuntu.demo" : "bongani@brightfutures.demo",
-      paymentStatus: "unpaid" as const,
-      learnerStatus: "active" as const,
-    },
-  ];
+  const isBrightFutures = key === "brightfutures";
+  const numLearners = isBrightFutures ? 742 : 315;
+  const targetPresent = isBrightFutures ? 520 : 250;
+  const targetAbsent = isBrightFutures ? 38 : 12;
+  const targetPendingPayments = isBrightFutures ? 18 : 5;
 
-  const learners: DemoLearnerDoc[] = learnerSpecs.map((spec) => {
-    const { id, ...rest } = spec;
-    const stamped = stampTenantCreate({ ...rest, notes: `Demo learner at ${schoolName}` }, ctx, timestamps);
-    return stripUndefinedDeep({ id, ...stamped }) as DemoLearnerDoc;
-  });
+  const learners: DemoLearnerDoc[] = [];
+  const attendance: DemoAttendanceDoc[] = [];
+  const payments: DemoPaymentDoc[] = [];
 
-  const attendance: DemoAttendanceDoc[] = learners.map((learner, i) => {
-    const stamped = stampTenantCreate(
-      {
-        learnerId: learner.id,
-        learnerName: `${learner.firstName} ${learner.lastName}`,
-        date: "2026-07-14",
-        status: i === 2 ? "absent" : i === 1 ? "late" : "present",
-        className: learner.className,
-        programme: schoolName,
-      },
-      ctx,
-      timestamps,
-    );
-    return stripUndefinedDeep({ id: `${prefix}-att-${i + 1}`, ...stamped }) as DemoAttendanceDoc;
-  });
+  const firstNames = ["Zara", "Liam", "Amahle", "Ethan", "Chloe", "Noah", "Mia", "Leo", "Sienna", "Aiden"];
+  const lastNames = ["Dlamini", "Smith", "Nkosi", "Mokoena", "Naidoo", "Williams", "Patel", "Botha", "Jacobs", "Molefe"];
+  const activities = isBrightFutures 
+    ? ["Mathematics", "English", "Science", "History", "Geography", "Life Skills"]
+    : ["Advanced Mathematics", "Physical Sciences", "Accounting", "Business Studies", "Information Technology", "Economics"];
 
-  const payments: DemoPaymentDoc[] = learners.map((learner, i) => {
-    const expected = 750;
-    const paid = i === 0 ? 750 : i === 1 ? 400 : 0;
-    // Firestore rejects `undefined` field values — omit paymentDate when unpaid/partial
+  for (let i = 0; i < numLearners; i++) {
+    const fn = firstNames[i % firstNames.length];
+    const ln = lastNames[i % lastNames.length];
+    const activity = activities[i % activities.length];
+    
+    // Payments logic
+    let paymentStatus: "paid" | "partial" | "unpaid" = "paid";
+    let expected = 750;
+    let paid = 750;
+    if (i < targetPendingPayments) {
+      paymentStatus = i % 2 === 0 ? "unpaid" : "partial";
+      paid = paymentStatus === "unpaid" ? 0 : 400;
+    }
+
+    const learnerSpec = {
+      firstName: fn,
+      lastName: `${ln} ${i}`,
+      className: `Grade ${(i % 7) + 1}`,
+      programme: schoolName,
+      instrumentOrActivity: activity,
+      parentName: `Parent ${fn} ${ln}`,
+      parentPhone: `082000${String(i).padStart(4, "0")}`,
+      parentEmail: `parent${i}@${key}.demo`,
+      paymentStatus,
+      learnerStatus: "active" as const,
+      notes: `Demo learner at ${schoolName}`,
+    };
+
+    const stampedLearner = stampTenantCreate(learnerSpec, ctx, timestamps);
+    const learnerId = `${prefix}-learner-${i + 1}`;
+    learners.push(stripUndefinedDeep({ id: learnerId, ...stampedLearner }) as DemoLearnerDoc);
+
+    // Attendance logic
+    let attStatus: "present" | "absent" | "late" = "late";
+    if (i < targetPresent) attStatus = "present";
+    else if (i < targetPresent + targetAbsent) attStatus = "absent";
+
+    const stampedAtt = stampTenantCreate({
+      learnerId,
+      learnerName: `${fn} ${ln} ${i}`,
+      date: "2026-07-14",
+      status: attStatus,
+      className: learnerSpec.className,
+      programme: schoolName,
+    }, ctx, timestamps);
+    attendance.push(stripUndefinedDeep({ id: `${prefix}-att-${i + 1}`, ...stampedAtt }) as DemoAttendanceDoc);
+
+    // Payment docs
     const paymentFields: Record<string, unknown> = {
-      learnerId: learner.id,
-      learnerName: `${learner.firstName} ${learner.lastName}`,
+      learnerId,
+      learnerName: `${fn} ${ln} ${i}`,
       month: "2026-07",
       expectedAmount: expected,
       paidAmount: paid,
       balance: expected - paid,
-      status: i === 0 ? "paid" : i === 1 ? "partial" : "unpaid",
+      status: paymentStatus,
     };
-    if (i === 0) {
-      paymentFields.paymentDate = "2026-07-05";
-    }
-    const stamped = stampTenantCreate(paymentFields, ctx, timestamps);
-    return stripUndefinedDeep({ id: `${prefix}-pay-${i + 1}`, ...stamped }) as DemoPaymentDoc;
-  });
+    if (paymentStatus === "paid") paymentFields.paymentDate = "2026-07-05";
+    const stampedPay = stampTenantCreate(paymentFields, ctx, timestamps);
+    payments.push(stripUndefinedDeep({ id: `${prefix}-pay-${i + 1}`, ...stampedPay }) as DemoPaymentDoc);
+  }
 
   const parentSubmissions: DemoSubmissionDoc[] = [
     stripUndefinedDeep({
@@ -258,7 +252,7 @@ export function buildSchoolDemoData(
           learnerLastName: key === "ubuntu" ? "Williams" : "Naidoo",
           className: "Grade 2",
           programme: schoolName,
-          instrumentOrActivity: key === "ubuntu" ? "Choir" : "Violin",
+          instrumentOrActivity: key === "ubuntu" ? "Information Technology" : "Mathematics",
           parentName: key === "ubuntu" ? "Sam Williams" : "Priya Naidoo",
           parentPhone: "0800111222",
           parentEmail: "newparent@demo.school",

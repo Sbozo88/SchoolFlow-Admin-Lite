@@ -1,1 +1,1 @@
-export { default } from "@/views/admin/LearnersPage";
+export { default } from "@/features/learners/pages/LearnersPage";

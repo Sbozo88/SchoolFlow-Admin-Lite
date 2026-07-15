@@ -1,1 +1,1 @@
-export { default } from "@/views/admin/ParentSubmissionsPage";
+export { default } from "@/features/parents/pages/ParentSubmissionsPage";

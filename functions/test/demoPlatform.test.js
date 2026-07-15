@@ -4,8 +4,8 @@ import { DEMO_SCHOOLS, buildDemoDocuments, evaluateBootstrapAccess, summarizeDoc
 
 test("uses the required school identities and isolated tenant ids", () => {
   assert.deepEqual(DEMO_SCHOOLS.map(({ name, email, tenantId }) => ({ name, email, tenantId })), [
-    { name: "Greenfield Music School", email: "admin@greenfield-music.demo", tenantId: "tenant-demo-greenfield" },
-    { name: "Riverside Arts Academy", email: "admin@riverside-arts.demo", tenantId: "tenant-demo-riverside" },
+    { name: "Bright Futures Academy", email: "admin@brightfutures.demo", tenantId: "tenant-demo-brightfutures" },
+    { name: "Ubuntu Excellence College", email: "admin@ubuntu.demo", tenantId: "tenant-demo-ubuntu" },
   ]);
 });
 
@@ -28,11 +28,11 @@ test("builds deterministic, unique, interconnected records", () => {
 test("covers live dashboards and workflows with usable data", () => {
   const counts = summarizeDocuments();
   assert.equal(counts.tenants, 2);
-  assert.equal(counts.learners, 12);
-  assert.equal(counts.attendance, 60);
-  assert.equal(counts.payments, 12);
-  assert.equal(counts.followUps, 6);
-  assert.equal(counts.parentSubmissions, 4);
+  assert.equal(counts.learners, 1057);
+  assert.equal(counts.attendance, 1057);
+  assert.equal(counts.payments, 1057);
+  assert.equal(counts.followUps, 32);
+  assert.equal(counts.parentSubmissions, 10);
   assert.equal(counts.recentActivity, 10);
   assert.equal(counts.setupSprintTasks, 10);
   assert.equal(counts.missingInfoItems, 4);

@@ -1,1 +1,1 @@
-export { default } from "@/views/admin/AttendancePage";
+export { default } from "@/features/attendance/pages/AttendancePage";

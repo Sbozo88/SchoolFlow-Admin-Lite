@@ -72,7 +72,12 @@ export function LoginForm() {
       await login(email, password);
       // Auth state effect will route via homePath/workspace once profile loads
     } catch {
-      setError("We could not sign you in. Check the email, password, and admin profile.");
+      const isDemoAccount = DEMO_SCHOOL_DEFINITIONS.some(d => d.adminEmail === email);
+      if (isDemoAccount) {
+        setError("Demo account not found. Please sign in as Super Admin first (using Apple/Google) and click 'Load demo platform' to generate the demo schools.");
+      } else {
+        setError("We could not sign you in. Check the email, password, and admin profile.");
+      }
       setIsSubmitting(false);
     }
   }
@@ -128,15 +133,30 @@ export function LoginForm() {
         ) : null}
 
         {isConfigured ? (
-          <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] leading-5 text-slate-600">
-            <p className="font-bold text-slate-800">Demo logins (after “Load demo platform”)</p>
-            <p className="mt-1">
-              <span className="font-semibold">Super Admin:</span> your Firebase account (promoted on load)
+          <div className="mb-5 flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3 text-[12px] leading-5 text-slate-600">
+            <p className="font-bold text-slate-800">Quick Demo Logins</p>
+            <p className="text-[11px] text-slate-500 mb-1">
+              <strong>Note:</strong> These accounts only work after you have signed in with your Google/Apple account and clicked "Load demo platform" on the Super Admin dashboard.
             </p>
             {DEMO_SCHOOL_DEFINITIONS.map((s) => (
-              <p key={s.key} className="font-mono">
-                {s.adminEmail} / {DEMO_SCHOOL_PASSWORD}
-              </p>
+              <button
+                key={s.key}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setEmail(s.adminEmail);
+                  setPassword(DEMO_SCHOOL_PASSWORD);
+                }}
+                className="group flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-left shadow-sm transition-all hover:border-blue-400 hover:bg-blue-50/50"
+              >
+                <div className="flex flex-col">
+                  <span className="font-semibold text-slate-800">{s.organizationName} Admin</span>
+                  <span className="text-[10px] text-slate-500 font-mono mt-0.5">{s.adminEmail}</span>
+                </div>
+                <div className="flex size-6 items-center justify-center rounded-full bg-slate-100 text-slate-400 transition-colors group-hover:bg-blue-600 group-hover:text-white">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </div>
+              </button>
             ))}
           </div>
         ) : null}

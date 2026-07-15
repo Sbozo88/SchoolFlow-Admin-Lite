@@ -8,7 +8,7 @@ export const DEMO_SCHOOLS = [
     email: "admin@brightfutures.demo",
     adminName: "Bright Futures Admin",
     planId: "plan-growth",
-    activities: ["Piano", "Guitar", "Violin", "Drums", "Choir", "Music Theory"],
+    activities: ["Mathematics", "English", "Science", "History", "Geography", "Life Skills"],
     learnerNames: [
       ["Zara", "Dlamini", "Thandi Dlamini"],
       ["Liam", "Smith", "Sarah Smith"],
@@ -25,7 +25,7 @@ export const DEMO_SCHOOLS = [
     email: "admin@ubuntu.demo",
     adminName: "Ubuntu Admin",
     planId: "plan-starter",
-    activities: ["Drama", "Fine Art", "Dance", "Choir", "Photography", "Ceramics"],
+    activities: ["Advanced Mathematics", "Physical Sciences", "Accounting", "Business Studies", "Information Technology", "Economics"],
     learnerNames: [
       ["Mia", "Patel", "Anita Patel"],
       ["Leo", "Botha", "Karin Botha"],
@@ -104,82 +104,117 @@ export function buildSchoolDocuments(school) {
     }));
   }
 
-  const learners = school.learnerNames.map(([firstName, lastName, parentName], index) => ({
-    id: `${school.key}-learner-${index + 1}`,
-    firstName, lastName, parentName,
-    className: `Grade ${3 + (index % 4)}`,
-    programme: school.activities[index],
-    instrumentOrActivity: school.activities[index],
-    parentPhone: `08255${school.key === "brightfutures" ? "10" : "20"}${String(index + 1).padStart(2, "0")}`,
-    parentEmail: `${parentName.toLowerCase().replace(/\s+/g, ".")}@demo.school`,
-    paymentStatus: index < 3 ? "paid" : index < 5 ? "partial" : "unpaid",
-    learnerStatus: "active",
-    notes: `Demo learner at ${school.name}`,
-    demo: true,
-  }));
+  const isBrightFutures = school.key === "brightfutures";
+  const numLearners = isBrightFutures ? 742 : 315;
+  const targetPresent = isBrightFutures ? 520 : 250;
+  const targetAbsent = isBrightFutures ? 38 : 12;
+  const targetPendingPayments = isBrightFutures ? 18 : 5;
+
+  const firstNames = ["Zara", "Liam", "Amahle", "Ethan", "Chloe", "Noah", "Mia", "Leo", "Sienna", "Aiden"];
+  const lastNames = ["Dlamini", "Smith", "Nkosi", "Mokoena", "Naidoo", "Williams", "Patel", "Botha", "Jacobs", "Molefe"];
+
+  const learners = Array.from({ length: numLearners }).map((_, index) => {
+    const fn = firstNames[index % firstNames.length];
+    const ln = lastNames[index % lastNames.length];
+    const activity = school.activities[index % school.activities.length];
+    
+    let paymentStatus = "paid";
+    if (index < targetPendingPayments) {
+      paymentStatus = index % 2 === 0 ? "unpaid" : "partial";
+    }
+
+    return {
+      id: `${school.key}-learner-${index + 1}`,
+      firstName: fn,
+      lastName: `${ln} ${index}`,
+      parentName: `Parent ${fn} ${ln}`,
+      className: `Grade ${(index % 7) + 1}`,
+      programme: activity,
+      instrumentOrActivity: activity,
+      parentPhone: `08255${isBrightFutures ? "10" : "20"}${String(index % 100).padStart(2, "0")}`,
+      parentEmail: `parent${index}@demo.school`,
+      paymentStatus,
+      learnerStatus: "active",
+      notes: `Demo learner at ${school.name}`,
+      demo: true,
+    };
+  });
   learners.forEach((learner) => docs.push(tenantDoc("learners", learner.id, school.tenantId, learner)));
 
   learners.forEach((learner, learnerIndex) => {
-    ATTENDANCE_DATES.forEach((date, dateIndex) => {
-      const status = (learnerIndex + dateIndex) % 9 === 0 ? "absent" : (learnerIndex + dateIndex) % 7 === 0 ? "late" : "present";
-      docs.push(tenantDoc("attendance", `${school.key}-attendance-${learnerIndex + 1}-${dateIndex + 1}`, school.tenantId, {
-        id: `${school.key}-attendance-${learnerIndex + 1}-${dateIndex + 1}`,
-        learnerId: learner.id,
-        learnerName: `${learner.firstName} ${learner.lastName}`,
-        date, status, className: learner.className, programme: learner.programme, demo: true,
-      }));
-    });
+    // We only generate 1 day of attendance to save docs, targeting specific numbers
+    let attStatus = "late";
+    if (learnerIndex < targetPresent) attStatus = "present";
+    else if (learnerIndex < targetPresent + targetAbsent) attStatus = "absent";
+    
+    docs.push(tenantDoc("attendance", `${school.key}-attendance-${learnerIndex + 1}-1`, school.tenantId, {
+      id: `${school.key}-attendance-${learnerIndex + 1}-1`,
+      learnerId: learner.id,
+      learnerName: `${learner.firstName} ${learner.lastName}`,
+      date: "2026-07-14", 
+      status: attStatus, 
+      className: learner.className, 
+      programme: learner.programme, 
+      demo: true,
+    }));
   });
 
   learners.forEach((learner, index) => {
-    const expectedAmount = school.key === "brightfutures" ? 850 : 780;
-    const paidAmount = index < 3 ? expectedAmount : index < 5 ? Math.round(expectedAmount * 0.55) : 0;
+    const expectedAmount = isBrightFutures ? 850 : 780;
+    let paidAmount = expectedAmount;
+    if (index < targetPendingPayments) {
+      paidAmount = index % 2 === 0 ? 0 : Math.round(expectedAmount * 0.55);
+    }
     docs.push(tenantDoc("payments", `${school.key}-payment-${index + 1}`, school.tenantId, {
       id: `${school.key}-payment-${index + 1}`,
       learnerId: learner.id,
       learnerName: `${learner.firstName} ${learner.lastName}`,
       month: "2026-07", expectedAmount, paidAmount, balance: expectedAmount - paidAmount,
       status: paidAmount === expectedAmount ? "paid" : paidAmount > 0 ? "partial" : "unpaid",
-      ...(paidAmount === expectedAmount ? { paymentDate: `2026-07-0${index + 2}` } : {}),
+      ...(paidAmount === expectedAmount ? { paymentDate: `2026-07-05` } : {}),
       notes: "July demo fee", demo: true,
     }));
   });
 
-  [3, 4, 5].forEach((learnerIndex, index) => {
-    const learner = learners[learnerIndex];
+  const targetFollowUps = isBrightFutures ? 24 : 8;
+  for (let index = 0; index < targetFollowUps; index++) {
+    const learner = learners[index];
     docs.push(tenantDoc("followUps", `${school.key}-follow-up-${index + 1}`, school.tenantId, {
       id: `${school.key}-follow-up-${index + 1}`,
       learnerId: learner.id,
       learnerName: `${learner.firstName} ${learner.lastName}`,
       parentName: learner.parentName,
       parentPhone: learner.parentPhone,
-      reason: index === 2 ? "unpaid_fees" : index === 1 ? "missing_info" : "absence",
-      status: index === 2 ? "urgent" : "pending",
+      reason: index % 3 === 0 ? "unpaid_fees" : index % 3 === 1 ? "missing_info" : "absence",
+      status: index % 2 === 0 ? "urgent" : "pending", // active followUps include both pending and urgent
       message: `Please follow up with ${learner.parentName} regarding ${learner.firstName}.`,
-      dueDate: `2026-07-${18 + index}`, demo: true,
+      dueDate: `2026-07-${18 + (index % 10)}`, demo: true,
     }));
-  });
+  }
 
-  [0, 1].forEach((index) => docs.push(tenantDoc("parentSubmissions", `${school.key}-submission-${index + 1}`, school.tenantId, {
-    id: `${school.key}-submission-${index + 1}`,
-    learnerFirstName: index === 0 ? "Ava" : "Luke",
-    learnerLastName: index === 0 ? "Thomas" : "Wilson",
-    className: `Grade ${2 + index}`,
-    programme: school.activities[index],
-    instrumentOrActivity: school.activities[index],
-    parentName: index === 0 ? "Linda Thomas" : "Grace Wilson",
-    parentPhone: `083700100${index}`,
-    parentEmail: `new.parent${index + 1}@demo.school`,
-    status: index === 0 ? "new" : "reviewed",
-    message: `Interested in ${school.activities[index]} at ${school.name}.`, demo: true,
-  })));
+  const targetForms = isBrightFutures ? 7 : 3;
+  for (let index = 0; index < targetForms; index++) {
+    docs.push(tenantDoc("parentSubmissions", `${school.key}-submission-${index + 1}`, school.tenantId, {
+      id: `${school.key}-submission-${index + 1}`,
+      learnerFirstName: firstNames[index % firstNames.length],
+      learnerLastName: lastNames[index % lastNames.length],
+      className: `Grade ${(index % 7) + 1}`,
+      programme: school.activities[index % school.activities.length],
+      instrumentOrActivity: school.activities[index % school.activities.length],
+      parentName: `Parent ${index}`,
+      parentPhone: `083700100${index}`,
+      parentEmail: `new.parent${index + 1}@demo.school`,
+      status: "new",
+      message: `Interested in ${school.activities[index % school.activities.length]} at ${school.name}.`, demo: true,
+    }));
+  }
 
   const activity = [
-    ["learner", "Six learner profiles ready", "Review the complete demo learner register", "/admin/learners"],
-    ["attendance", "Attendance captured", "Five days of attendance are available", "/admin/attendance"],
-    ["payment", "July fees reconciled", "Paid, partial, and unpaid records are ready", "/admin/payments"],
-    ["form", "New enrollment received", "A parent form is waiting for review", "/admin/parent-form"],
-    ["followup", "Parent follow-ups queued", "Three realistic follow-up tasks are ready", "/admin/parent-follow-ups"],
+    ["learner", "Six learner profiles ready", "Review the complete demo learner register", "/school/learners"],
+    ["attendance", "Attendance captured", "Five days of attendance are available", "/school/attendance"],
+    ["payment", "July fees reconciled", "Paid, partial, and unpaid records are ready", "/school/payments"],
+    ["form", "New enrollment received", "A parent form is waiting for review", "/school/parent-form"],
+    ["followup", "Parent follow-ups queued", "Three realistic follow-up tasks are ready", "/school/parent-follow-ups"],
   ];
   activity.forEach(([type, title, description, link], index) => docs.push(tenantDoc("recentActivity", `${school.key}-activity-${index + 1}`, school.tenantId, {
     id: `${school.key}-activity-${index + 1}`, type, title, description, link,
@@ -202,6 +237,15 @@ export function buildSchoolDocuments(school) {
   ].forEach(([learner, category, description, status, priority], index) => docs.push(tenantDoc("missingInfoItems", `${school.key}-missing-${index + 1}`, school.tenantId, {
     id: `${school.key}-missing-${index + 1}`, learnerId: learner.id,
     learnerName: `${learner.firstName} ${learner.lastName}`, category, description, status, priority, demo: true,
+  })));
+
+  [
+    ["Archive Term 2 Data", "Archive all attendance and grades for Term 2.", "Pending", "Term 2"],
+    ["Generate Report Cards", "Finalize and distribute report cards.", "Pending", "Term 2"],
+    ["Update Fee Structures", "Set new fees for the upcoming term.", "Done", "Term 2"],
+    ["Clear Term 1 Arrears", "Follow up on all term 1 unpaid balances.", "Done", "Term 1"],
+  ].forEach(([title, description, status, term], index) => docs.push(tenantDoc("handoverTasks", `${school.key}-handover-${index + 1}`, school.tenantId, {
+    id: `${school.key}-handover-${index + 1}`, title, description, status, term, demo: true,
   })));
 
   docs.push(tenantDoc("supportChecks", `${school.key}-support-2026-07`, school.tenantId, {

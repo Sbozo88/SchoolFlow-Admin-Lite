@@ -1,1 +1,1 @@
-export { default } from "@/views/admin/FollowUpsPage";
+export { default } from "@/features/parents/pages/FollowUpsPage";

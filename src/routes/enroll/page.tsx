@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { createSubmission } from "@/hooks/useParentSubmissions";
+import { useParentSubmissions } from "@/features/parents/hooks/useParentSubmissions";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { isFirebaseConfigured } from "@/firebase/firebaseConfig";
@@ -10,6 +10,7 @@ import { isFirebaseConfigured } from "@/firebase/firebaseConfig";
 export default function EnrollPage() {
   const [searchParams] = useSearchParams();
   const tenantId = searchParams.get("tenantId") || searchParams.get("tenant") || "";
+  const { createSubmission } = useParentSubmissions();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -43,10 +44,7 @@ export default function EnrollPage() {
     setError("");
 
     try {
-      await createSubmission(formValues, {
-        tenantId: tenantId.trim(),
-        userId: "public-enroll",
-      });
+      await createSubmission(formValues, tenantId.trim());
       setSuccess(true);
     } catch (err: unknown) {
       console.error(err);
