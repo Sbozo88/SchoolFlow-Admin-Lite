@@ -1,0 +1,16 @@
+[debug] [2026-07-15T11:24:32.727Z] ----------------------------------------------------------------------
+[debug] [2026-07-15T11:24:32.730Z] Command:       /opt/homebrew/Cellar/node/26.0.0/bin/node /Users/mphele4488/.npm-global/bin/firebase deploy --only hosting
+[debug] [2026-07-15T11:24:32.730Z] CLI Version:   15.18.0
+[debug] [2026-07-15T11:24:32.730Z] Platform:      darwin
+[debug] [2026-07-15T11:24:32.730Z] Node Version:  v26.0.0
+[debug] [2026-07-15T11:24:32.730Z] Time:          Wed Jul 15 2026 13:24:32 GMT+0200 (South Africa Standard Time)
+[debug] [2026-07-15T11:24:32.730Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-07-15T11:24:33.760Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-07-15T11:24:33.760Z] > authorizing via signed-in user (mphele4488@gmail.com)
+[debug] [2026-07-15T11:24:33.760Z] [iam] checking project schoolflow-admin-lite for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-07-15T11:24:33.761Z] Checked if tokens are valid: true, expires at: 1784117294519
+[debug] [2026-07-15T11:24:33.761Z] Checked if tokens are valid: true, expires at: 1784117294519
+[debug] [2026-07-15T11:24:33.762Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/schoolflow-admin-lite:testIamPermissions [none]
+[debug] [2026-07-15T11:24:33.762Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/schoolflow-admin-lite:testIamPermissions  x-goog-user-project=schoolflow-admin-lite
+[debug] [2026-07-15T11:24:33.762Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/schoolflow-admin-lite:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
