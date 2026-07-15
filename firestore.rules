@@ -79,7 +79,12 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read: if signedIn() && (request.auth.uid == userId || isPlatform() || (hasUserDoc() && resource.data.tenantId == userTenantId()));
-      allow create, update: if isPlatform() || (signedIn() && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'platformRole', 'tenantId']));
+      allow create: if isPlatform() || (signedIn()
+        && request.auth.uid == userId
+        && !request.resource.data.keys().hasAny(['role', 'platformRole', 'tenantId', 'permissions']));
+      allow update: if isPlatform() || (signedIn()
+        && request.auth.uid == userId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'platformRole', 'tenantId', 'permissions', 'createdAt', 'createdBy']));
       allow delete: if isSuperAdmin();
     }
 

@@ -10,7 +10,7 @@ export const DEMO_SCHOOL_PASSWORD = "DemoSchool123!";
 export const DEMO_SCHOOL_DEFINITIONS = [
   {
     key: "greenfield",
-    organizationName: "Greenfield Music Academy",
+    organizationName: "Greenfield Music School",
     adminEmail: "admin@greenfield-music.demo",
     adminDisplayName: "Greenfield Admin",
     adminPassword: DEMO_SCHOOL_PASSWORD,
@@ -20,7 +20,7 @@ export const DEMO_SCHOOL_DEFINITIONS = [
   },
   {
     key: "riverside",
-    organizationName: "Riverside Arts School",
+    organizationName: "Riverside Arts Academy",
     adminEmail: "admin@riverside-arts.demo",
     adminDisplayName: "Riverside Admin",
     adminPassword: DEMO_SCHOOL_PASSWORD,

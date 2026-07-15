@@ -584,6 +584,19 @@ describe("Super Admin dashboard metrics", () => {
 });
 
 describe("demo platform bootstrap (Super Admin + two schools)", () => {
+  it("keeps privileged demo operations on the callable backend and refreshes the session", () => {
+    const client = readFileSync(join(process.cwd(), "src/firebase/bootstrapDemoPlatform.ts"), "utf8");
+    const dashboard = readFileSync(join(process.cwd(), "src/routes/super-admin/page.tsx"), "utf8");
+    const backend = readFileSync(join(process.cwd(), "functions/src/index.js"), "utf8");
+    assert.match(client, /httpsCallable/);
+    assert.doesNotMatch(client, /createUserWithEmailAndPassword|writeBatch|setCustomUserClaims/);
+    assert.match(dashboard, /await refreshSession\(\)/);
+    assert.match(backend, /firebase-admin\/auth/);
+    assert.match(backend, /setCustomUserClaims/);
+    assert.match(backend, /updateUser/);
+    assert.match(backend, /OWNER_REF/);
+  });
+
   it("builds platform-only Super Admin and two distinct school tenants with stamped demo data", async () => {
     const {
       buildDemoPlatformBootstrap,
@@ -602,8 +615,8 @@ describe("demo platform bootstrap (Super Admin + two schools)", () => {
 
     assert.equal(bootstrap.schools.length, 2);
     assert.equal(DEMO_SCHOOL_DEFINITIONS.length, 2);
-    assert.equal(bootstrap.schools[0].definition.organizationName, "Greenfield Music Academy");
-    assert.equal(bootstrap.schools[1].definition.organizationName, "Riverside Arts School");
+    assert.equal(bootstrap.schools[0].definition.organizationName, "Greenfield Music School");
+    assert.equal(bootstrap.schools[1].definition.organizationName, "Riverside Arts Academy");
 
     assert.equal(isPlatformOnlySuperAdmin(bootstrap.superAdmin), true);
     assert.equal(bootstrap.superAdmin.platformRole, "super_admin");
@@ -636,7 +649,7 @@ describe("demo platform bootstrap (Super Admin + two schools)", () => {
     assert.equal(filterByTenant(aLearners, idA).length, aLearners.length);
 
     // Direct builder also stamps via stampTenantCreate
-    const extra = buildSchoolDemoData(idA, "Greenfield Music Academy", "user-super-admin-demo", {
+    const extra = buildSchoolDemoData(idA, "Greenfield Music School", "user-super-admin-demo", {
       now: () => "2026-07-15T12:00:00.000Z",
     }, { schoolKey: "greenfield" });
     assert.ok(extra.learners.every((l) => l.tenantId === idA && hasRequiredTenantMeta(l)));

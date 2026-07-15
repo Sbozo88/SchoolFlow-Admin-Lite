@@ -21,7 +21,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import type { ProvisionClientInput } from "@/lib/provision/provisionTenant";
 
 export function usePlatformTenants() {
-  const { user } = useAuth();
+  const { user, platformRole } = useAuth();
   const isConfigured = isFirebaseConfigured();
   const [tenants, setTenants] = useState<TenantRecord[]>([]);
   const [syncState, setSyncState] = useState(() => (isConfigured ? "Connecting" : "idle"));
@@ -42,7 +42,7 @@ export function usePlatformTenants() {
         setErrorMessage("Could not load tenants. Check platform role and rules.");
       },
     );
-  }, [isConfigured]);
+  }, [isConfigured, platformRole]);
 
   const stats = computePlatformStats({ tenants });
 

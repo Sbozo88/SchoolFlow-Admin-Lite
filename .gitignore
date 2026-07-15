@@ -9,6 +9,7 @@ playwright-report/
 
 # firebase
 .firebase/
+firestore-debug.log
 
 # environment
 .env

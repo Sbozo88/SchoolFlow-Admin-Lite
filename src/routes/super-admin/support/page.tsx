@@ -37,27 +37,27 @@ export default function SuperAdminSupportPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-slate-900">Support center</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Support center</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Assist clients, open read-only workspace views, and trigger password resets (client-side Firebase limits apply).
         </p>
       </div>
 
       <Card className="p-5 space-y-3">
-        <h2 className="text-sm font-bold">Password reset</h2>
+        <h2 className="text-sm font-bold dark:text-white">Password reset</h2>
         <Input label="User email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <Button type="button" onClick={() => void handleReset()}>
           Send reset email
         </Button>
-        {notice && <p className="text-sm text-slate-600">{notice}</p>}
+        {notice && <p className="text-sm text-slate-600 dark:text-slate-400">{notice}</p>}
       </Card>
 
       <Card className="p-5">
-        <h2 className="text-sm font-bold">Quick impersonation (audited, temporary)</h2>
+        <h2 className="text-sm font-bold dark:text-white">Quick impersonation (audited, temporary)</h2>
         <ul className="mt-3 space-y-2">
           {tenants.map((t) => (
             <li key={t.id} className="flex items-center justify-between gap-2 text-sm">
-              <span className="font-semibold">{t.name}</span>
+              <span className="font-semibold dark:text-white">{t.name}</span>
               <Button
                 type="button"
                 variant="secondary"
@@ -71,12 +71,12 @@ export default function SuperAdminSupportPage() {
               </Button>
             </li>
           ))}
-          {tenants.length === 0 && <li className="text-slate-500">No clients to support.</li>}
+          {tenants.length === 0 && <li className="text-slate-500 dark:text-slate-400">No clients to support.</li>}
         </ul>
       </Card>
 
-      <Card className="p-5 text-sm text-slate-600">
-        <p className="font-bold text-slate-900">Troubleshooting notes</p>
+      <Card className="p-5 text-sm text-slate-600 dark:text-slate-400">
+        <p className="font-bold text-slate-900 dark:text-white">Troubleshooting notes</p>
         <ul className="mt-2 list-disc space-y-1 pl-5">
           <li>Confirm users/{"{uid}"} has platformRole or tenantId + role.</li>
           <li>Resend invitations: re-run provision or update invitations collection (email delivery future-ready).</li>

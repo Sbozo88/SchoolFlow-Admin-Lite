@@ -85,14 +85,14 @@ export default function SuperAdminClientsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-black text-slate-900">Client management</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-black text-slate-900 dark:text-white">Client management</h1>
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Provision, edit, assign plans, lifecycle, and support impersonation ({syncState}).
         </p>
       </div>
 
       <Card className="p-5">
-        <h2 className="text-sm font-bold text-slate-900">Create client (auto-provision)</h2>
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white">Create client (auto-provision)</h2>
         <form onSubmit={handleCreate} className="mt-4 grid gap-3 sm:grid-cols-2">
           <Input
             label="Organization name"
@@ -107,10 +107,10 @@ export default function SuperAdminClientsPage() {
             value={adminEmail}
             onChange={(e) => setAdminEmail(e.target.value)}
           />
-          <label className="grid gap-1 text-sm font-bold text-slate-700">
+          <label className="grid gap-1 text-sm font-bold text-slate-700 dark:text-slate-300">
             Plan
             <select
-              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm"
+              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-white"
               value={planId}
               onChange={(e) => setPlanId(e.target.value)}
             >
@@ -127,14 +127,14 @@ export default function SuperAdminClientsPage() {
             </Button>
           </div>
         </form>
-        {message && <p className="mt-3 text-sm font-medium text-slate-600">{message}</p>}
-        {errorMessage && <p className="mt-2 text-sm text-rose-600">{errorMessage}</p>}
+        {message && <p className="mt-3 text-sm font-medium text-slate-600 dark:text-slate-400">{message}</p>}
+        {errorMessage && <p className="mt-2 text-sm text-rose-600 dark:text-rose-400">{errorMessage}</p>}
       </Card>
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+            <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">
               <tr>
                 <th className="px-4 py-3">Organization</th>
                 <th className="px-4 py-3">Status</th>
@@ -144,18 +144,18 @@ export default function SuperAdminClientsPage() {
                 <th className="px-4 py-3">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {tenants.map((t) => (
                 <tr key={t.id}>
                   <td className="px-4 py-3">
-                    <p className="font-bold text-slate-900">{t.name}</p>
-                    <p className="font-mono text-[11px] text-slate-400">{t.id}</p>
-                    <p className="text-xs text-slate-500">{t.adminEmail}</p>
+                    <p className="font-bold text-slate-900 dark:text-white">{t.name}</p>
+                    <p className="font-mono text-[11px] text-slate-400 dark:text-slate-500">{t.id}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{t.adminEmail}</p>
                   </td>
-                  <td className="px-4 py-3 font-semibold capitalize">{t.status}</td>
+                  <td className="px-4 py-3 font-semibold capitalize dark:text-slate-300">{t.status}</td>
                   <td className="px-4 py-3">
                     <select
-                      className="rounded border border-slate-200 px-2 py-1 text-xs"
+                      className="rounded border border-slate-200 bg-white px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-800 dark:text-white"
                       value={t.planId}
                       onChange={(e) => void assignPlan(t.id, e.target.value)}
                     >
@@ -166,28 +166,28 @@ export default function SuperAdminClientsPage() {
                       ))}
                     </select>
                   </td>
-                  <td className="px-4 py-3 text-xs">{t.subscriptionStatus}</td>
-                  <td className="px-4 py-3 text-xs">
+                  <td className="px-4 py-3 text-xs dark:text-slate-300">{t.subscriptionStatus}</td>
+                  <td className="px-4 py-3 text-xs dark:text-slate-300">
                     {t.storageUsedBytes ?? 0} / {t.storageQuotaBytes ?? 0}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
                       <button
                         type="button"
-                        className="rounded bg-indigo-50 px-2 py-1 text-[11px] font-bold text-indigo-800"
+                        className="rounded bg-indigo-50 px-2 py-1 text-[11px] font-bold text-indigo-800 dark:bg-indigo-500/10 dark:text-indigo-400"
                         onClick={() => openEdit(t)}
                       >
                         Edit
                       </button>
                       <Link
-                        className="rounded bg-slate-100 px-2 py-1 text-[11px] font-bold"
+                        className="rounded bg-slate-100 px-2 py-1 text-[11px] font-bold dark:bg-slate-800 dark:text-slate-300"
                         to={`/super-admin/clients/monitor?tenantId=${encodeURIComponent(t.id)}`}
                       >
                         Monitor
                       </Link>
                       <button
                         type="button"
-                        className="rounded bg-teal-50 px-2 py-1 text-[11px] font-bold text-teal-800"
+                        className="rounded bg-teal-50 px-2 py-1 text-[11px] font-bold text-teal-800 dark:bg-teal-500/10 dark:text-teal-400"
                         onClick={() => {
                           startImpersonation(t.id, "read");
                           window.location.href = `/admin?tenantId=${encodeURIComponent(t.id)}`;
@@ -197,28 +197,28 @@ export default function SuperAdminClientsPage() {
                       </button>
                       <button
                         type="button"
-                        className="rounded bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-800"
+                        className="rounded bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-800 dark:bg-amber-500/10 dark:text-amber-400"
                         onClick={() => void applyLifecycle(t.id, "suspend")}
                       >
                         Suspend
                       </button>
                       <button
                         type="button"
-                        className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800"
+                        className="rounded bg-emerald-50 px-2 py-1 text-[11px] font-bold text-emerald-800 dark:bg-emerald-500/10 dark:text-emerald-400"
                         onClick={() => void applyLifecycle(t.id, "reactivate")}
                       >
                         Reactivate
                       </button>
                       <button
                         type="button"
-                        className="rounded bg-slate-100 px-2 py-1 text-[11px] font-bold"
+                        className="rounded bg-slate-100 px-2 py-1 text-[11px] font-bold dark:bg-slate-800 dark:text-slate-300"
                         onClick={() => void applyLifecycle(t.id, "archive")}
                       >
                         Archive
                       </button>
                       <button
                         type="button"
-                        className="rounded bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700"
+                        className="rounded bg-rose-50 px-2 py-1 text-[11px] font-bold text-rose-700 dark:bg-rose-500/10 dark:text-rose-400"
                         onClick={() => {
                           if (confirm(`Delete client ${t.name}?`)) void applyLifecycle(t.id, "delete");
                         }}
@@ -231,7 +231,7 @@ export default function SuperAdminClientsPage() {
               ))}
               {tenants.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400">
+                  <td colSpan={6} className="px-4 py-8 text-center text-slate-400 dark:text-slate-500">
                     No clients provisioned yet.
                   </td>
                 </tr>
@@ -244,7 +244,7 @@ export default function SuperAdminClientsPage() {
       <Modal isOpen={Boolean(editing)} onClose={() => setEditing(null)} title="Edit client">
         {editing && (
           <form onSubmit={handleSaveEdit} className="space-y-4">
-            <p className="font-mono text-[11px] text-slate-400">{editing.id}</p>
+            <p className="font-mono text-[11px] text-slate-400 dark:text-slate-500">{editing.id}</p>
             <Input
               label="Organization name"
               required

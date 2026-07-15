@@ -42,6 +42,8 @@ type AuthContextValue = {
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  /** Force-refresh Firebase claims and the Firestore profile after privileged mutations. */
+  refreshSession: () => Promise<UserProfile | null>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -130,6 +132,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           throw new Error("Firebase is not configured.");
         }
         await signInWithGoogle();
+      },
+      refreshSession: async () => {
+        if (!user) return null;
+        await user.getIdToken(true);
+        const nextProfile = await getUserProfile(user.uid);
+        setProfile(nextProfile);
+        setAuthError(nextProfile ? "" : "Your updated profile could not be loaded.");
+        return nextProfile;
       },
       logout: async () => {
         // Always clear support impersonation so it cannot survive sign-out or transfer to the next user
