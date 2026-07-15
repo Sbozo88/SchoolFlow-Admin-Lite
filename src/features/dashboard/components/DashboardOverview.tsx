@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { DashboardCalendar } from "./DashboardCalendar";
+import { DashboardCalendar, type CalendarEvent } from "./DashboardCalendar";
 import { StatCard } from "@/components/ui/StatCard";
 import { WelcomeCard } from "@/components/ui/WelcomeCard";
 import { QuickActionButton } from "@/components/ui/QuickActionButton";
@@ -80,17 +80,35 @@ export function DashboardOverview() {
     (profile?.displayName || user?.displayName || "Admin").split(/\s+/)[0] || "Admin";
 
   const isBrightFutures = profile?.tenantId === "demo-brightfutures";
-  const upcomingEvents = isBrightFutures
+  const today = new Date();
+  
+  const addDays = (date: Date, days: number) => {
+    const result = new Date(date);
+    result.setDate(result.getDate() + days);
+    return result;
+  };
+
+  const formatEventTime = (date: Date, timeStr: string) => {
+    const isToday = date.toDateString() === today.toDateString();
+    const isTomorrow = date.toDateString() === addDays(today, 1).toDateString();
+    
+    if (isToday) return `Today, ${timeStr}`;
+    if (isTomorrow) return `Tomorrow, ${timeStr}`;
+    return `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}, ${timeStr}`;
+  };
+
+
+  const upcomingEvents: CalendarEvent[] = isBrightFutures
     ? [
-        { name: "Parent Teacher Day", time: "Jul 8, 2:00 PM", color: "bg-[#ff6b81]" },
-        { name: "Sports Day", time: "Jul 15, 8:00 AM", color: "bg-[#feca57]" },
-        { name: "Term Exams", time: "Jul 20, 9:00 AM", color: "bg-[#00d2d3]" },
-        { name: "School Assembly", time: "Jul 25, 10:00 AM", color: "bg-[#a29bfe]" },
+        { id: "e1", name: "Parent Teacher Day", date: addDays(today, 2), time: "2:00 PM", color: "bg-[#ff6b81]", textColor: "text-white" },
+        { id: "e2", name: "Sports Day", date: addDays(today, 5), time: "8:00 AM", color: "bg-[#feca57]", textColor: "text-[#4834d4]" },
+        { id: "e3", name: "Term Exams", date: addDays(today, 10), time: "9:00 AM", color: "bg-[#00d2d3]", textColor: "text-[#1e293b]" },
+        { id: "e4", name: "School Assembly", date: addDays(today, 15), time: "10:00 AM", color: "bg-[#a29bfe]", textColor: "text-white" },
       ]
     : [
-        { name: "Ubuntu Staff Briefing", time: "Tomorrow, 8:00 AM", color: "bg-[#6c5ce7]" },
-        { name: "Science Fair", time: "Aug 2, 10:00 AM", color: "bg-[#1dd1a1]" },
-        { name: "Choir Practice", time: "Aug 5, 3:00 PM", color: "bg-[#ff9f43]" },
+        { id: "e5", name: "Ubuntu Staff Briefing", date: addDays(today, 1), time: "8:00 AM", color: "bg-[#6c5ce7]", textColor: "text-white" },
+        { id: "e6", name: "Science Fair", date: addDays(today, 7), time: "10:00 AM", color: "bg-[#1dd1a1]", textColor: "text-white" },
+        { id: "e7", name: "Choir Practice", date: addDays(today, 12), time: "3:00 PM", color: "bg-[#ff9f43]", textColor: "text-white" },
       ];
 
   return (
@@ -167,7 +185,7 @@ export function DashboardOverview() {
 
       {/* Right column: calendar + events */}
       <div className="w-full shrink-0 space-y-5 xl:w-[340px]">
-        <DashboardCalendar />
+        <DashboardCalendar events={upcomingEvents} />
 
         <div className="rounded-[24px] border border-slate-100/80 bg-white p-6 shadow-[0_4px_18px_rgba(15,23,42,0.04)]">
           <h3 className="mb-4 flex items-center gap-2 text-[16px] font-bold text-slate-900">
@@ -177,13 +195,13 @@ export function DashboardOverview() {
           <div className="space-y-2.5">
             {upcomingEvents.map((event) => (
               <div
-                key={event.name}
+                key={event.id}
                 className="flex cursor-default items-center gap-3 rounded-2xl p-3 transition-colors hover:bg-[#f8f7ff]"
               >
                 <div className={`h-10 w-1 rounded-full ${event.color}`} />
                 <div>
                   <p className="text-[14px] font-semibold text-slate-800">{event.name}</p>
-                  <p className="text-[12px] text-slate-400">{event.time}</p>
+                  <p className="text-[12px] text-slate-400">{formatEventTime(event.date, event.time)}</p>
                 </div>
               </div>
             ))}

@@ -1,14 +1,85 @@
+import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export function DashboardCalendar() {
-  const days = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
-  const dates = [
-    ['', '', '', '01', '02', '03', '04'],
-    ['05', '06', '07', '08', '09', '10', '11'],
-    ['12', '13', '14', '15', '16', '17', '18'],
-    ['19', '20', '21', '22', '23', '24', '25'],
-    ['26', '27', '28', '29', '30', '31', '']
-  ];
+export type CalendarEvent = {
+  id: string;
+  name: string;
+  date: Date;
+  time: string;
+  color: string;
+  textColor?: string;
+};
+
+interface DashboardCalendarProps {
+  events: CalendarEvent[];
+}
+
+export function DashboardCalendar({ events }: DashboardCalendarProps) {
+  const [currentDate, setCurrentDate] = useState(() => new Date());
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+  };
+
+  const days = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"];
+
+  const generateGrid = () => {
+    const firstDay = new Date(year, month, 1).getDay();
+    const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const grid: (number | null)[][] = [];
+    let currentWeek: (number | null)[] = [];
+
+    for (let i = 0; i < startOffset; i++) {
+      currentWeek.push(null);
+    }
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      currentWeek.push(day);
+      if (currentWeek.length === 7) {
+        grid.push(currentWeek);
+        currentWeek = [];
+      }
+    }
+
+    if (currentWeek.length > 0) {
+      while (currentWeek.length < 7) {
+        currentWeek.push(null);
+      }
+      grid.push(currentWeek);
+    }
+    return grid;
+  };
+
+  const grid = generateGrid();
+  const monthName = currentDate.toLocaleString("default", { month: "long" });
+
+  const getEventForDay = (day: number) => {
+    return events.find((e) => {
+      return (
+        e.date.getFullYear() === year &&
+        e.date.getMonth() === month &&
+        e.date.getDate() === day
+      );
+    });
+  };
+
+  const isToday = (day: number) => {
+    const today = new Date();
+    return (
+      today.getFullYear() === year &&
+      today.getMonth() === month &&
+      today.getDate() === day
+    );
+  };
 
   return (
     <div
@@ -17,7 +88,11 @@ export function DashboardCalendar() {
     >
       <div className="relative z-10 mb-5 flex items-center justify-between">
         <h3 className="text-lg font-bold tracking-tight">Event Calendar</h3>
-        <button type="button" className="text-white/60 transition-colors hover:text-white" aria-label="Calendar menu">
+        <button
+          type="button"
+          className="text-white/60 transition-colors hover:text-white"
+          aria-label="Calendar menu"
+        >
           <div className="flex gap-1">
             <span className="size-1.5 rounded-full bg-current" />
             <span className="size-1.5 rounded-full bg-current" />
@@ -41,45 +116,80 @@ export function DashboardCalendar() {
         </button>
       </div>
 
-      <div className="flex items-center justify-between mb-6 relative z-10">
-        <h4 className="font-bold text-[15px]">July 2026</h4>
+      <div className="relative z-10 mb-6 flex items-center justify-between">
+        <h4 className="text-[15px] font-bold">
+          {monthName} {year}
+        </h4>
         <div className="flex gap-3">
-          <button className="text-white/60 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+          <button
+            onClick={handlePrevMonth}
+            className="rounded-lg p-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+          >
             <ChevronLeft size={18} />
           </button>
-          <button className="text-white/60 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10">
+          <button
+            onClick={handleNextMonth}
+            className="rounded-lg p-1 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+          >
             <ChevronRight size={18} />
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-y-3 mb-2 relative z-10">
-        {days.map(day => (
-          <div key={day} className="text-center text-[11px] font-bold text-white/40">{day}</div>
-        ))}
-        
-        {dates.flat().map((date, i) => (
-          <div key={i} className="flex justify-center">
-            {date === '02' ? (
-              <div className="size-8 rounded-full bg-[#ff6b81] text-white flex items-center justify-center text-[13px] font-bold shadow-sm shadow-[#ff6b81]/30">
-                {date}
-              </div>
-            ) : date === '15' ? (
-              <div className="size-8 rounded-full bg-[#feca57] text-[#4834d4] flex items-center justify-center text-[13px] font-bold shadow-sm">
-                {date}
-              </div>
-            ) : (
-              <div className={`size-8 flex items-center justify-center text-[13px] font-medium ${date ? 'text-white/90 hover:bg-white/10 rounded-full cursor-pointer transition-colors' : ''}`}>
-                {date}
-              </div>
-            )}
+      <div className="relative z-10 mb-2 grid grid-cols-7 gap-y-3">
+        {days.map((day) => (
+          <div key={day} className="text-center text-[11px] font-bold text-white/40">
+            {day}
           </div>
         ))}
+
+        {grid.flat().map((day, i) => {
+          if (day === null) {
+            return <div key={`empty-${i}`} className="flex justify-center size-8" />;
+          }
+
+          const event = getEventForDay(day);
+          const isCurrentDay = isToday(day);
+          const displayDay = day.toString().padStart(2, "0");
+
+          if (event) {
+            return (
+              <div key={day} className="flex justify-center">
+                <div
+                  className={`flex size-8 items-center justify-center rounded-full text-[13px] font-bold shadow-sm ${event.color} ${
+                    event.textColor ? event.textColor : "text-white"
+                  }`}
+                  style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.12)" }}
+                >
+                  {displayDay}
+                </div>
+              </div>
+            );
+          }
+
+          if (isCurrentDay) {
+            return (
+              <div key={day} className="flex justify-center">
+                <div className="flex size-8 items-center justify-center rounded-full border-2 border-white/40 text-[13px] font-bold text-white">
+                  {displayDay}
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={day} className="flex justify-center">
+              <div className="flex size-8 cursor-pointer items-center justify-center rounded-full text-[13px] font-medium text-white/90 transition-colors hover:bg-white/10">
+                {displayDay}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Decorative elements */}
       <div className="absolute -bottom-8 -right-8 size-32 rounded-full bg-white/5" />
-      <div className="absolute -top-6 -left-6 size-20 rounded-full bg-[#ff6b81]/10" />
+      <div className="absolute -left-6 -top-6 size-20 rounded-full bg-[#ff6b81]/10" />
     </div>
   );
 }
