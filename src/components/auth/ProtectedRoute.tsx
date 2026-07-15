@@ -5,26 +5,78 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useOptionalTenant } from "@/components/tenant/TenantProvider";
 import { Button } from "@/components/ui/Button";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
-import type { Role } from "@/lib/types";
+import type { PlatformRole } from "@/lib/permissions/roles";
+import {
+  canStayOnClientWorkspace,
+  shouldRedirectPlatformUserFromAdmin,
+} from "@/lib/permissions/workspaceAccess";
 
 export function ProtectedRoute({
   children,
-  allowedRoles = ["admin"],
+  workspace = "client",
+  allowedPlatformRoles,
 }: {
   children: ReactNode;
-  allowedRoles?: Role[];
+  /** client = school-ops /admin; platform = super-admin portal */
+  workspace?: "client" | "platform";
+  allowedPlatformRoles?: PlatformRole[];
 }) {
-  const { user, role, loading, authError, logout, isConfigured } = useAuth();
+  const {
+    user,
+    role,
+    platformRole,
+    tenantRole,
+    tenantId,
+    loading,
+    authError,
+    logout,
+    isConfigured,
+    homePath,
+  } = useAuth();
+  const tenant = useOptionalTenant();
+  const isImpersonating = Boolean(tenant?.isImpersonating && tenant.activeTenantId);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && isConfigured && !user) {
-      router.replace(`/login?next=${encodeURIComponent(pathname ?? "/admin")}`);
+      router.replace(`/login?next=${encodeURIComponent(pathname ?? homePath)}`);
     }
-  }, [isConfigured, loading, pathname, router, user]);
+  }, [homePath, isConfigured, loading, pathname, router, user]);
+
+  // Redirect pure platform users away from client workspace UNLESS impersonating a tenant
+  useEffect(() => {
+    if (loading || !user) return;
+    if (
+      workspace === "client" &&
+      pathname?.startsWith("/admin") &&
+      shouldRedirectPlatformUserFromAdmin({
+        platformRole,
+        homeTenantId: tenantId,
+        tenantRole,
+        isImpersonating,
+      })
+    ) {
+      router.replace("/super-admin");
+    }
+    if (workspace === "platform" && !platformRole && (role || tenantRole)) {
+      router.replace("/admin");
+    }
+  }, [
+    isImpersonating,
+    loading,
+    platformRole,
+    role,
+    router,
+    tenantId,
+    tenantRole,
+    user,
+    workspace,
+    pathname,
+  ]);
 
   if (!isConfigured) {
     return (
@@ -40,12 +92,58 @@ export function ProtectedRoute({
       <BrandedLoading
         detail="Checking your secure Firebase session."
         fullScreen
-        title="Loading SchoolFlow Admin LITE"
+        title="Loading SchoolFlow Admin Lite"
       />
     );
   }
 
-  if (!role || !allowedRoles.includes(role)) {
+  if (workspace === "platform") {
+    const allowed = allowedPlatformRoles ?? ["super_admin", "platform_support", "platform_manager"];
+    if (!platformRole || !allowed.includes(platformRole)) {
+      return (
+        <AccessShell
+          action={
+            <Button onClick={logout} type="button" variant="secondary">
+              Sign out
+            </Button>
+          }
+          detail={
+            authError ||
+            "Platform access required. Your account is not a Super Admin or platform staff user."
+          }
+          icon={<ShieldAlert size={24} />}
+          title="Platform access required"
+        />
+      );
+    }
+    return children;
+  }
+
+  const hasClientAccess = canStayOnClientWorkspace({
+    role,
+    platformRole,
+    tenantRole,
+    homeTenantId: tenantId,
+    isImpersonating,
+  });
+
+  if (!hasClientAccess) {
+    if (
+      shouldRedirectPlatformUserFromAdmin({
+        platformRole,
+        homeTenantId: tenantId,
+        tenantRole,
+        isImpersonating,
+      })
+    ) {
+      return (
+        <BrandedLoading
+          detail="Opening Super Admin workspace."
+          fullScreen
+          title="Redirecting"
+        />
+      );
+    }
     return (
       <AccessShell
         action={
@@ -53,7 +151,10 @@ export function ProtectedRoute({
             Sign out
           </Button>
         }
-        detail={authError || "Your account is signed in, but it does not have the admin role required for this workspace."}
+        detail={
+          authError ||
+          "Your account is signed in, but it does not have access to this client workspace."
+        }
         icon={<ShieldAlert size={24} />}
         title="Admin access required"
       />
@@ -84,7 +185,10 @@ function AccessShell({
         <p className="mt-2 text-sm leading-6 text-slate-600">{detail}</p>
         <div className="mt-5 flex justify-center gap-3">
           {action ?? (
-            <Link className="inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-bold text-white" href="/login">
+            <Link
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-bold text-white"
+              href="/login"
+            >
               Go to login
             </Link>
           )}

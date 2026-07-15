@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { ShieldCheck, CheckCircle2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { useParentSubmissions } from "@/hooks/useParentSubmissions";
+import { createSubmission } from "@/hooks/useParentSubmissions";
 
 export function ParentFormView() {
-  const { createSubmission } = useParentSubmissions();
-  
+  const searchParams = useSearchParams();
+  const tenantId = searchParams?.get("tenantId") || searchParams?.get("tenant") || "";
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
@@ -32,10 +34,20 @@ export function ParentFormView() {
     setErrorMsg("");
 
     try {
-      await createSubmission(formValues);
+      if (!tenantId.trim()) {
+        throw new Error("Missing tenantId");
+      }
+      await createSubmission(formValues, {
+        tenantId: tenantId.trim(),
+        userId: "public-form",
+      });
       setIsSuccess(true);
     } catch {
-      setErrorMsg("Failed to submit the form. Please check your connection and try again.");
+      setErrorMsg(
+        tenantId
+          ? "Failed to submit the form. Please check your connection and try again."
+          : "This form requires a tenant link (?tenantId=...). Contact your school for the correct enrollment URL.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -63,7 +75,6 @@ export function ParentFormView() {
   return (
     <main className="min-h-screen bg-slate-50 flex flex-col items-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        
         <div className="bg-slate-900 p-8 text-center text-white">
           <div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-white/10 mb-4">
             <ShieldCheck size={24} className="text-teal-400" />
@@ -80,52 +91,87 @@ export function ParentFormView() {
           )}
 
           <form onSubmit={handleSubmit} className="grid gap-6">
-            
             <div className="space-y-4">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-2">Learner Details</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-2">
+                Learner Details
+              </h2>
               <div className="grid sm:grid-cols-2 gap-4">
-                <Input label="First Name" required value={formValues.learnerFirstName} onChange={e => setFormValues(prev => ({...prev, learnerFirstName: e.target.value}))} />
-                <Input label="Last Name" required value={formValues.learnerLastName} onChange={e => setFormValues(prev => ({...prev, learnerLastName: e.target.value}))} />
+                <Input
+                  label="First Name"
+                  required
+                  value={formValues.learnerFirstName}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, learnerFirstName: e.target.value }))}
+                />
+                <Input
+                  label="Last Name"
+                  required
+                  value={formValues.learnerLastName}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, learnerLastName: e.target.value }))}
+                />
               </div>
               <div className="grid sm:grid-cols-3 gap-4">
-                <Input label="Class/Grade" required value={formValues.className} onChange={e => setFormValues(prev => ({...prev, className: e.target.value}))} />
-                <Input label="Programme" required value={formValues.programme} onChange={e => setFormValues(prev => ({...prev, programme: e.target.value}))} />
-                <Input label="Instrument/Activity" value={formValues.instrumentOrActivity} onChange={e => setFormValues(prev => ({...prev, instrumentOrActivity: e.target.value}))} />
-              </div>
-            </div>
-
-            <div className="space-y-4 mt-4">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-2">Parent / Guardian Details</h2>
-              <Input label="Full Name" required value={formValues.parentName} onChange={e => setFormValues(prev => ({...prev, parentName: e.target.value}))} />
-              <div className="grid sm:grid-cols-2 gap-4">
-                <Input label="Phone Number" required value={formValues.parentPhone} onChange={e => setFormValues(prev => ({...prev, parentPhone: e.target.value}))} />
-                <Input label="Email Address" type="email" value={formValues.parentEmail} onChange={e => setFormValues(prev => ({...prev, parentEmail: e.target.value}))} />
-              </div>
-              <Input label="Emergency Contact (Optional)" value={formValues.emergencyContact} onChange={e => setFormValues(prev => ({...prev, emergencyContact: e.target.value}))} />
-            </div>
-
-            <div className="space-y-4 mt-4">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-2">Additional Information</h2>
-              <div className="grid gap-2">
-                <label className="text-sm font-bold text-slate-700">Any notes or messages?</label>
-                <textarea 
-                  rows={4}
-                  className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-100"
-                  value={formValues.message}
-                  onChange={e => setFormValues(prev => ({...prev, message: e.target.value}))}
+                <Input
+                  label="Class/Grade"
+                  required
+                  value={formValues.className}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, className: e.target.value }))}
+                />
+                <Input
+                  label="Programme"
+                  required
+                  value={formValues.programme}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, programme: e.target.value }))}
+                />
+                <Input
+                  label="Instrument/Activity"
+                  value={formValues.instrumentOrActivity}
+                  onChange={(e) =>
+                    setFormValues((prev) => ({ ...prev, instrumentOrActivity: e.target.value }))
+                  }
                 />
               </div>
             </div>
 
-            <Button type="submit" className="w-full mt-4 h-12 text-base" disabled={isSubmitting}>
+            <div className="space-y-4 mt-4">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-2">
+                Parent / Guardian Details
+              </h2>
+              <Input
+                label="Full Name"
+                required
+                value={formValues.parentName}
+                onChange={(e) => setFormValues((prev) => ({ ...prev, parentName: e.target.value }))}
+              />
+              <div className="grid sm:grid-cols-2 gap-4">
+                <Input
+                  label="Phone"
+                  required
+                  value={formValues.parentPhone}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, parentPhone: e.target.value }))}
+                />
+                <Input
+                  label="Email"
+                  type="email"
+                  value={formValues.parentEmail}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, parentEmail: e.target.value }))}
+                />
+              </div>
+              <Input
+                label="Emergency Contact"
+                value={formValues.emergencyContact}
+                onChange={(e) => setFormValues((prev) => ({ ...prev, emergencyContact: e.target.value }))}
+              />
+              <Input
+                label="Message"
+                value={formValues.message}
+                onChange={(e) => setFormValues((prev) => ({ ...prev, message: e.target.value }))}
+              />
+            </div>
+
+            <Button type="submit" disabled={isSubmitting} className="w-full">
               {isSubmitting ? "Submitting..." : "Submit Registration"}
             </Button>
-            
-            <p className="text-center text-xs text-slate-400 mt-4">
-              Powered by <span className="font-bold">SchoolFlow Lite</span>
-            </p>
           </form>
-
         </div>
       </div>
     </main>

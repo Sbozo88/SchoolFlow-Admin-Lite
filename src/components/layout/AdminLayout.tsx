@@ -1,206 +1,219 @@
 "use client";
 
+import { useState } from "react";
 import {
   BarChart3,
-  CalendarCheck,
   CreditCard,
   FileText,
-  MessageSquareText,
   Settings,
-  GraduationCap,
   Users,
-  CheckCircle,
-  LifeBuoy,
-  Inbox,
+  Activity,
+  Search,
   Bell,
-  Mail,
   Menu,
   X,
+  ClipboardList,
+  CheckSquare,
+  LifeBuoy,
+  PhoneForwarded,
+  LayoutDashboard
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { AccountMenu } from "@/components/auth/AccountMenu";
-import { useState } from "react";
-import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const primaryNavItems = [
-  { label: "Dashboard", href: "/admin", icon: BarChart3 },
+  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { label: "Learners", href: "/admin/learners", icon: Users },
-  { label: "Attendance", href: "/admin/attendance", icon: CalendarCheck },
+  { label: "Attendance", href: "/admin/attendance", icon: CheckSquare },
   { label: "Payments", href: "/admin/payments", icon: CreditCard },
-  { label: "Follow-ups", href: "/admin/follow-ups", icon: MessageSquareText },
-  { label: "Reports", href: "/admin/reports", icon: FileText },
-  { label: "Parent Form", href: "/admin/parent-submissions", icon: Inbox },
+  { label: "Parent Follow-Ups", href: "/admin/parent-follow-ups", icon: PhoneForwarded },
+  { label: "Reports", href: "/admin/reports", icon: BarChart3 },
+  { label: "Parent Form", href: "/admin/parent-form", icon: ClipboardList },
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
 const secondaryNavItems = [
-  { label: "Setup Sprint", href: "/admin/setup-sprint", icon: CheckCircle },
-  { label: "Monthly Support", href: "/admin/support", icon: LifeBuoy },
+  { label: "Setup Sprint", href: "/admin/setup-sprint", icon: Activity },
+  { label: "Handover", href: "/admin/handover", icon: FileText },
+  { label: "Monthly Support", href: "/admin/monthly-support", icon: LifeBuoy },
 ];
 
-function NavLink({
-  item,
-  isActive,
-  onClick,
+export function AdminLayout({
+  children,
 }: {
-  item: { label: string; href: string; icon: React.ElementType };
-  isActive: boolean;
-  onClick?: () => void;
+  children: React.ReactNode;
 }) {
-  const Icon = item.icon;
-  return (
-    <Link
-      className={`flex min-h-[44px] items-center gap-3 px-6 text-sm font-semibold transition-colors relative ${
-        isActive
-          ? "bg-orange-50/50 text-orange-500 before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-orange-500"
-          : "text-slate-400 hover:text-slate-700 hover:bg-slate-50"
-      }`}
-      href={item.href}
-      onClick={onClick}
-    >
-      <Icon size={20} className={isActive ? "text-orange-500" : "text-slate-400"} />
-      {item.label}
-    </Link>
-  );
-}
-
-export function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { profile, user } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Derive title from pathname
-  const activePrimary = primaryNavItems.find((item) =>
-    item.href === "/admin" ? pathname === "/admin" : pathname?.startsWith(item.href)
-  );
-  const activeSecondary = secondaryNavItems.find((item) => pathname?.startsWith(item.href));
-  const title = activePrimary?.label || activeSecondary?.label || "Dashboard";
+  // Determine active item based on pathname
+  let activeItem = "Dashboard";
+  const allNavItems = [...primaryNavItems, ...secondaryNavItems];
+  const matchedNav = allNavItems.slice().reverse().find((item) => {
+    if (item.href === "/admin") return pathname === "/admin" || pathname === "/admin/";
+    return pathname?.startsWith(item.href);
+  });
+  if (matchedNav) {
+    activeItem = matchedNav.label;
+  }
 
-  const sidebarContent = (
-    <>
-      <div className="h-20 flex items-center gap-3 px-8 mb-4 shrink-0">
-        <div className="text-orange-500">
-          <GraduationCap size={28} />
-        </div>
-        <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
-          SchoolFlow.
-        </h1>
-      </div>
-
-      <div className="flex-1 overflow-y-auto py-2 flex flex-col gap-8">
-        <nav className="flex flex-col gap-1">
-          {primaryNavItems.map((item) => {
-            const isActive =
-              item.href === "/admin"
-                ? pathname === "/admin"
-                : pathname?.startsWith(item.href);
-
-            return (
-              <NavLink
-                key={item.label}
-                item={item}
-                isActive={isActive}
-                onClick={() => setIsMobileMenuOpen(false)}
-              />
-            );
-          })}
-        </nav>
-
-        <nav className="flex flex-col gap-1 mt-auto pb-6">
-          <h3 className="px-6 pb-3 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-            Admin Tools
-          </h3>
-          {secondaryNavItems.map((item) => {
-            const isActive = pathname?.startsWith(item.href);
-            return (
-              <NavLink
-                key={item.label}
-                item={item}
-                isActive={isActive}
-                onClick={() => setIsMobileMenuOpen(false)}
-              />
-            );
-          })}
-        </nav>
-      </div>
-    </>
-  );
+  const welcomeName =
+    profile?.displayName ||
+    user?.displayName ||
+    user?.email?.split("@")[0] ||
+    "Admin";
 
   return (
-    <main className="min-h-screen bg-[#F4F7FE] dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex font-sans">
-      {/* Desktop Sidebar */}
-      <aside className="w-[260px] bg-white dark:bg-slate-800 hidden lg:flex flex-col border-r border-slate-100 dark:border-slate-700 shadow-sm fixed inset-y-0 left-0 z-10">
-        {sidebarContent}
-      </aside>
-
+    <div className="flex h-screen overflow-hidden bg-[#f0f2f8] text-slate-900 font-sans">
       {/* Mobile Sidebar Overlay */}
-      {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-            onClick={() => setIsMobileMenuOpen(false)}
-          />
-          {/* Sidebar panel */}
-          <aside className="absolute inset-y-0 left-0 w-[280px] bg-white dark:bg-slate-800 flex flex-col shadow-xl animate-slide-in">
-            <button
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="absolute top-5 right-4 size-9 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition z-10"
-              aria-label="Close menu"
-            >
-              <X size={20} />
-            </button>
-            {sidebarContent}
-          </aside>
-        </div>
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-20 md:hidden" 
+          onClick={() => setIsSidebarOpen(false)}
+        />
       )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 lg:pl-[260px]">
-        {/* Top Header */}
-        <header className="h-20 lg:h-24 px-4 lg:px-8 flex items-center justify-between sticky top-0 z-10 backdrop-blur-md bg-[#F4F7FE]/80 dark:bg-slate-900/80">
+      {/* Sidebar - Purple gradient */}
+      <aside className={`fixed inset-y-0 left-0 z-30 w-[260px] transform flex flex-col transition-transform duration-300 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        style={{ background: 'linear-gradient(180deg, #6c5ce7 0%, #4834d4 100%)' }}
+      >
+        {/* Logo Area */}
+        <div className="flex h-20 items-center justify-between px-7">
           <div className="flex items-center gap-3">
-            {/* Mobile hamburger */}
-            <button
-              className="lg:hidden size-10 rounded-xl flex items-center justify-center text-slate-600 hover:bg-white hover:shadow-sm transition"
-              onClick={() => setIsMobileMenuOpen(true)}
-              aria-label="Open menu"
-            >
-              <Menu size={22} />
-            </button>
-            <div>
-              <h2 className="text-xl lg:text-2xl font-bold text-slate-900 dark:text-white">
-                {title}
-              </h2>
-              <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5 hidden sm:block">
-                School Management
-              </p>
+            <div className="flex size-9 items-center justify-center rounded-xl bg-white/20 p-1.5 backdrop-blur-sm shadow-sm">
+              <Image
+                src="/images/logo.png"
+                alt="SchoolFlow Logo"
+                width={22}
+                height={22}
+                className="object-contain brightness-0 invert"
+              />
             </div>
+            <h1 className="text-[17px] font-bold tracking-tight text-white">
+              SchoolFlow <span className="font-medium text-white/60">Lite</span>
+            </h1>
+          </div>
+          <button className="md:hidden text-white/70 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-6">
+          <div className="grid gap-1 px-4">
+            {primaryNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = item.label === activeItem;
+
+              return (
+                <Link
+                  className={`group relative flex items-center gap-4 rounded-xl px-4 py-3 text-[14px] transition-all ${
+                    isActive
+                      ? "font-bold text-white bg-white/20 backdrop-blur-sm shadow-sm"
+                      : "font-medium text-white/70 hover:text-white hover:bg-white/10"
+                  }`}
+                  href={item.href}
+                  key={item.label}
+                >
+                  <Icon size={18} className={isActive ? "text-white" : "text-white/50 group-hover:text-white/80"} />
+                  {item.label}
+                  {isActive && (
+                    <div className="absolute right-[-16px] top-1/2 -translate-y-1/2 w-[5px] h-8 bg-white rounded-l-full shadow-sm" />
+                  )}
+                </Link>
+              );
+            })}
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3 bg-white dark:bg-slate-800 px-2 sm:px-3 py-2 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-700">
-            <ThemeToggle />
-            <button
-              className="size-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition"
-              aria-label="Notifications"
-            >
-              <Bell size={18} />
-            </button>
-            <button
-              className="hidden sm:flex size-9 rounded-full items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-700 transition"
-              aria-label="Messages"
-            >
-              <Mail size={18} />
-            </button>
-            <div className="pl-2 pr-1 border-l border-slate-100 dark:border-slate-700 flex items-center gap-3">
-              <AccountMenu />
+          <div className="mt-10 px-4">
+            <div className="h-px bg-white/15 mb-4 mx-2" />
+            <p className="text-[11px] font-semibold text-white/40 uppercase tracking-wider px-4 mb-3">Support</p>
+            <div className="grid gap-1">
+              {secondaryNavItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = item.label === activeItem;
+
+                return (
+                  <Link
+                    className={`group relative flex items-center gap-4 rounded-xl px-4 py-3 text-[14px] transition-all ${
+                      isActive
+                        ? "font-bold text-white bg-white/20 backdrop-blur-sm"
+                        : "font-medium text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                    href={item.href}
+                    key={item.label}
+                  >
+                    <Icon size={18} className={isActive ? "text-white" : "text-white/50 group-hover:text-white/80"} />
+                    {item.label}
+                  </Link>
+                );
+              })}
             </div>
+          </div>
+        </nav>
+
+        {/* Sidebar footer decorative element */}
+        <div className="p-4">
+          <div className="rounded-2xl bg-white/10 backdrop-blur-sm p-4">
+            <p className="text-[13px] font-bold text-white mb-1">SchoolFlow Pro</p>
+            <p className="text-[11px] text-white/60 mb-3">Upgrade for advanced analytics & reporting</p>
+            <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
+              <div className="h-full w-3/5 rounded-full bg-gradient-to-r from-[#feca57] to-[#ff6b81]" />
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <div className="flex flex-1 flex-col overflow-hidden">
+        {/* Top Header */}
+        <header className="flex h-20 items-center justify-between bg-white px-8 z-10 shadow-[0_2px_12px_rgba(108,92,231,0.04)]">
+          <div className="flex items-center gap-4 md:gap-8">
+            <button 
+              className="md:hidden text-slate-500 hover:text-[#6c5ce7] transition-colors" 
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <Menu size={24} />
+            </button>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 hidden sm:block">{activeItem}</h2>
+              <p className="text-[12px] text-slate-400 hidden sm:block">
+                Welcome back, {welcomeName}
+              </p>
+            </div>
+            <div className="relative hidden md:flex items-center w-80">
+              <Search className="absolute left-4 text-[#6c5ce7]/40" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search anything..." 
+                className="w-full bg-[#f0f2f8] rounded-2xl py-2.5 pl-11 pr-4 text-[13px] font-medium outline-none placeholder:text-slate-400 focus:bg-[#eee9ff] focus:ring-2 focus:ring-[#6c5ce7]/20 transition-all"
+              />
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3 sm:gap-5">
+            <div className="flex items-center gap-3">
+              <div className="relative cursor-pointer text-slate-500 hover:text-[#6c5ce7] transition-colors p-2 rounded-xl hover:bg-[#eee9ff]">
+                <Bell size={20} />
+                <span className="absolute top-1 right-1 flex size-4 items-center justify-center rounded-full bg-[#ff6b81] text-[9px] font-bold text-white animate-badge-pulse">6</span>
+              </div>
+            </div>
+            <div className="h-8 w-px bg-slate-200 hidden sm:block" />
+            <AccountMenu compact />
           </div>
         </header>
 
-        {/* Page Content */}
-        <section className="px-4 lg:px-8 pb-8 flex-1">{children}</section>
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto px-8 py-8 bg-[#f0f2f8]">
+          <div className="mx-auto max-w-[1400px]">
+            {children}
+          </div>
+        </main>
       </div>
-    </main>
+    </div>
   );
 }

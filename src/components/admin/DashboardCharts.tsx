@@ -15,7 +15,7 @@ import {
   Bar,
 } from "recharts";
 
-const COLORS = ["#00C49F", "#FF8042", "#FFBB28"];
+const COLORS = ["#6c5ce7", "#ff6b81", "#feca57"];
 
 export function AttendanceTrendChart({ data }: { data: { name: string; present: number; absent: number }[] }) {
   return (
@@ -36,12 +36,12 @@ export function AttendanceTrendChart({ data }: { data: { name: string; present: 
             tick={{ fill: "#94A3B8", fontSize: 12 }} 
           />
           <Tooltip 
-            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 8px 32px rgba(108,92,231,0.15)' }}
           />
           <Line 
             type="monotone" 
             dataKey="present" 
-            stroke="#10B981" 
+            stroke="#1dd1a1" 
             strokeWidth={3} 
             dot={{ r: 4, strokeWidth: 2 }} 
             activeDot={{ r: 6 }} 
@@ -49,7 +49,7 @@ export function AttendanceTrendChart({ data }: { data: { name: string; present: 
           <Line 
             type="monotone" 
             dataKey="absent" 
-            stroke="#F43F5E" 
+            stroke="#ff6b81" 
             strokeWidth={3} 
             dot={{ r: 4, strokeWidth: 2 }} 
             activeDot={{ r: 6 }} 
@@ -61,7 +61,6 @@ export function AttendanceTrendChart({ data }: { data: { name: string; present: 
 }
 
 export function PaymentStatusChart({ data }: { data: { name: string; value: number }[] }) {
-  // data: [{ name: 'Paid', value: 400 }, ...]
   return (
     <div className="h-[200px] w-full flex justify-center mt-2 relative">
       <ResponsiveContainer width="100%" height="100%">
@@ -80,14 +79,14 @@ export function PaymentStatusChart({ data }: { data: { name: string; value: numb
               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
             ))}
           </Pie>
-          <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} />
+          <Tooltip contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 8px 32px rgba(108,92,231,0.15)' }} />
         </PieChart>
       </ResponsiveContainer>
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none flex-col">
         <span className="text-2xl font-black text-slate-800">
           {Math.round((data[0]?.value / (data.reduce((a,b)=>a+b.value,0)||1)) * 100)}%
         </span>
-        <span className="text-[10px] text-slate-500 font-bold uppercase">{data[0]?.name}</span>
+        <span className="text-[10px] text-[#6c5ce7] font-bold uppercase">{data[0]?.name}</span>
       </div>
     </div>
   );
@@ -109,13 +108,13 @@ export function ProgrammeDistributionChart({ data }: { data: { name: string; lea
             tick={{ fill: "#64748B", fontSize: 12, fontWeight: 600 }}
           />
           <Tooltip 
-            cursor={{fill: 'transparent'}}
-            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+            cursor={{fill: 'rgba(108,92,231,0.04)'}}
+            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 8px 32px rgba(108,92,231,0.15)' }}
           />
-          <Bar dataKey="learners" fill="#8B5CF6" radius={[0, 4, 4, 0]} barSize={20}>
+          <Bar dataKey="learners" fill="#6c5ce7" radius={[0, 6, 6, 0]} barSize={20}>
             {
               data.map((entry, index) => {
-                const colors = ["#F97316", "#8B5CF6", "#06B6D4", "#1E293B", "#10B981"];
+                const colors = ["#6c5ce7", "#ff6b81", "#00d2d3", "#feca57", "#1dd1a1"];
                 return <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />;
               })
             }

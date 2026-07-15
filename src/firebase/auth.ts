@@ -10,8 +10,8 @@ import {
   type NextOrObserver,
   type User,
 } from "firebase/auth";
-import { doc, getDoc } from "firebase/firestore";
-import { getFirebaseAuth, getFirebaseDb, isFirebaseConfigured } from "@/firebase/firebaseConfig";
+import { getFirebaseAuth, isFirebaseConfigured } from "@/firebase/firebaseConfig";
+import { getUserProfile } from "@/firebase/userProfile";
 import { normalizeRole } from "@/lib/rbac";
 import type { Role } from "@/lib/types";
 
@@ -54,6 +54,6 @@ export async function sendAdminPasswordReset(email: string) {
 
 export async function getAdminRole(uid: string): Promise<Role | null> {
   assertFirebaseConfigured();
-  const profile = await getDoc(doc(getFirebaseDb(), "users", uid));
-  return normalizeRole(profile.data()?.role);
+  const profile = await getUserProfile(uid);
+  return normalizeRole(profile?.role);
 }

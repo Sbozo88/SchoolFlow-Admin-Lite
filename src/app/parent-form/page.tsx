@@ -2,7 +2,7 @@ import { ParentFormView } from "@/views/ParentFormView";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Parent Registration Form | SchoolFlow",
+  title: "Parent Registration Form | SchoolFlow Admin Lite",
 };
 
 export default function Page() {

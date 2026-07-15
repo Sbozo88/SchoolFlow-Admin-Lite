@@ -1,35 +1,53 @@
 "use client";
 
 import { X } from "lucide-react";
-import type { ReactNode } from "react";
-import { Button } from "@/components/ui/Button";
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
 
-export function Modal({
-  title,
-  children,
-  isOpen,
-  onClose,
-}: {
-  title: string;
-  children: ReactNode;
+type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
-}) {
-  if (!isOpen) {
-    return null;
-  }
+  title: string;
+  children: React.ReactNode;
+};
 
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 px-4">
-      <section className="w-full max-w-lg rounded-lg border border-slate-200 bg-white shadow-xl dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100">
-        <header className="flex items-center justify-between border-b border-slate-200 px-5 py-4 dark:border-slate-700">
-          <h2 className="text-lg font-black text-slate-950 dark:text-white">{title}</h2>
-          <Button aria-label="Close modal" className="size-9 p-0" onClick={onClose} type="button" variant="ghost">
-            <X size={18} />
-          </Button>
-        </header>
-        <div className="p-5">{children}</div>
-      </section>
-    </div>
+export function Modal({ isOpen, onClose, title, children }: ModalProps) {
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div 
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"
+        onClick={onClose}
+      />
+      
+      <div className="relative z-10 w-full max-w-lg bg-white rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-slate-100 overflow-hidden mx-4 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+          <button 
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        
+        <div className="p-6 max-h-[80vh] overflow-y-auto">
+          {children}
+        </div>
+      </div>
+    </div>,
+    document.body
   );
 }

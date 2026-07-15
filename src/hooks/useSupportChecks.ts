@@ -3,12 +3,18 @@ import {
   collection,
   deleteDoc,
   doc,
-  serverTimestamp,
+  getDoc,
   updateDoc,
 } from "firebase/firestore";
 import type { SupportCheck } from "@/types/support";
 import { useFirestoreCollection } from "@/hooks/useFirestoreCollection";
 import { getFirebaseDb, isFirebaseConfigured } from "@/firebase/firebaseConfig";
+import { stampTenantCreate, stampTenantUpdate } from "@/lib/tenant/stamp";
+import { assertSameTenant } from "@/lib/tenant/filter";
+import type { TenantWriteContext } from "@/lib/tenant/types";
+import { firestoreTimestamps } from "@/firebase/tenantTimestamps";
+import { useOptionalTenant } from "@/components/tenant/TenantProvider";
+import { useMemo } from "react";
 
 const SUPPORT_CHECKS_COLLECTION = "supportChecks";
 
@@ -38,35 +44,65 @@ function getSupportCheckDoc(checkId: string) {
   return doc(getFirebaseDb(), SUPPORT_CHECKS_COLLECTION, checkId);
 }
 
-export async function createSupportCheck(values: Omit<SupportCheck, "id" | "createdAt" | "updatedAt">) {
-  const created = await addDoc(getSupportChecksCollection(), {
-    ...values,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
+export async function createSupportCheck(
+  values: Omit<SupportCheck, "id" | "createdAt" | "updatedAt" | "tenantId" | "createdBy">,
+  ctx: TenantWriteContext,
+) {
+  const created = await addDoc(
+    getSupportChecksCollection(),
+    stampTenantCreate({ ...values }, ctx, firestoreTimestamps),
+  );
   return created.id;
 }
 
-export async function updateSupportCheck(checkId: string, values: Partial<Omit<SupportCheck, "id" | "createdAt" | "updatedAt">>) {
-  await updateDoc(getSupportCheckDoc(checkId), {
-    ...values,
-    updatedAt: serverTimestamp(),
-  });
+export async function updateSupportCheck(
+  checkId: string,
+  values: Partial<Omit<SupportCheck, "id" | "createdAt" | "updatedAt" | "tenantId" | "createdBy">>,
+  ctx: TenantWriteContext,
+) {
+  const existing = await getDoc(getSupportCheckDoc(checkId));
+  assertSameTenant(existing.data()?.tenantId, ctx.tenantId, "update support check");
+  await updateDoc(getSupportCheckDoc(checkId), stampTenantUpdate({ ...values }, firestoreTimestamps));
 }
 
-export async function deleteSupportCheck(checkId: string) {
+export async function deleteSupportCheck(checkId: string, ctx: TenantWriteContext) {
+  const existing = await getDoc(getSupportCheckDoc(checkId));
+  assertSameTenant(existing.data()?.tenantId, ctx.tenantId, "delete support check");
   await deleteDoc(getSupportCheckDoc(checkId));
 }
 
 export function useSupportChecks() {
-  const collectionState = useFirestoreCollection<SupportCheck>(SUPPORT_CHECKS_COLLECTION, demoSupportChecks, {
-    orderByField: "month",
-  });
+  const tenant = useOptionalTenant();
+  const tenantId = tenant?.activeTenantId ?? null;
+  const writeContext = tenant?.writeContext ?? null;
 
-  return {
-    ...collectionState,
-    createSupportCheck,
-    updateSupportCheck,
-    deleteSupportCheck,
-  };
+  const collectionState = useFirestoreCollection<SupportCheck>(
+    SUPPORT_CHECKS_COLLECTION,
+    demoSupportChecks,
+    { orderByField: "month", tenantId },
+  );
+
+  return useMemo(
+    () => ({
+      ...collectionState,
+      createSupportCheck: async (
+        values: Omit<SupportCheck, "id" | "createdAt" | "updatedAt" | "tenantId" | "createdBy">,
+      ) => {
+        if (!writeContext) throw new Error("No tenant write context");
+        return createSupportCheck(values, writeContext);
+      },
+      updateSupportCheck: async (
+        checkId: string,
+        values: Partial<Omit<SupportCheck, "id" | "createdAt" | "updatedAt" | "tenantId" | "createdBy">>,
+      ) => {
+        if (!writeContext) throw new Error("No tenant write context");
+        return updateSupportCheck(checkId, values, writeContext);
+      },
+      deleteSupportCheck: async (checkId: string) => {
+        if (!writeContext) throw new Error("No tenant write context");
+        return deleteSupportCheck(checkId, writeContext);
+      },
+    }),
+    [collectionState, writeContext],
+  );
 }

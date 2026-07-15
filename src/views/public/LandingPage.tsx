@@ -7,7 +7,7 @@ export function LandingPage() {
     <PublicLayout>
       <section className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 lg:grid-cols-[1fr_380px] lg:items-center">
         <div>
-          <h1 className="max-w-3xl text-4xl font-black leading-tight text-slate-950 sm:text-5xl">SchoolFlow Admin LITE</h1>
+          <h1 className="max-w-3xl text-4xl font-black leading-tight text-slate-950 sm:text-5xl">SchoolFlow Admin Lite</h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
             A focused operations shell for learner administration, attendance, payments, follow-ups, and reporting.
           </p>

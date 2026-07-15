@@ -1,5 +1,1 @@
-import { LearnersPage } from "@/views/admin/LearnersPage";
-
-export default function AdminLearnersRoute() {
-  return <LearnersPage />;
-}
+export { default } from "@/views/admin/LearnersPage";

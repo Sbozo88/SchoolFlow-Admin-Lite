@@ -1,229 +1,286 @@
 "use client";
 
 import { 
-  GraduationCap, 
-  UserCheck, 
+  CheckCircle2, 
+  XCircle, 
   CreditCard, 
-  Inbox,
-  Users,
-  ChevronDown
+  PhoneForwarded, 
+  ClipboardList, 
+  Plus,
+  CheckSquare,
+  FileText,
+  ArrowRight,
+  ArrowUpRight,
+  ArrowDownRight,
+  MoreHorizontal,
+  Eye,
+  GraduationCap,
+  Calendar
 } from "lucide-react";
 import Link from "next/link";
-import { Card } from "@/components/ui/Card";
-
+import { DashboardCalendar } from "./home/DashboardCalendar";
 import { useLearners } from "@/hooks/useLearners";
 import { useAttendance } from "@/hooks/useAttendance";
 import { usePayments } from "@/hooks/usePayments";
 import { useFollowUps } from "@/hooks/useFollowUps";
 import { useParentSubmissions } from "@/hooks/useParentSubmissions";
-import { useRecentActivity } from "@/hooks/useRecentActivity";
 
-import { AttendanceTrendChart, PaymentStatusChart, ProgrammeDistributionChart } from "./DashboardChartsLazy";
-import { DashboardCalendar } from "./DashboardCalendar";
+const quickActions = [
+  { label: "Add Learner", icon: Plus, href: "/admin/learners?action=add", gradient: "from-[#6c5ce7] to-[#a29bfe]", shadow: "shadow-[0_4px_15px_rgba(108,92,231,0.3)]" },
+  { label: "Mark Attendance", icon: CheckSquare, href: "/admin/attendance", gradient: "from-[#00d2d3] to-[#01a3a4]", shadow: "shadow-[0_4px_15px_rgba(0,210,211,0.3)]" },
+  { label: "Record Payment", icon: CreditCard, href: "/admin/payments?action=record", gradient: "from-[#feca57] to-[#f0932b]", shadow: "shadow-[0_4px_15px_rgba(254,202,87,0.3)]" },
+  { label: "Create Follow-Up", icon: PhoneForwarded, href: "/admin/parent-follow-ups?action=create", gradient: "from-[#ff6b81] to-[#ee5a24]", shadow: "shadow-[0_4px_15px_rgba(255,107,129,0.3)]" },
+  { label: "Generate Report", icon: FileText, href: "/admin/reports", gradient: "from-[#1dd1a1] to-[#10ac84]", shadow: "shadow-[0_4px_15px_rgba(29,209,161,0.3)]" },
+  { label: "Review Forms", icon: ClipboardList, href: "/admin/parent-form", gradient: "from-[#a29bfe] to-[#6c5ce7]", shadow: "shadow-[0_4px_15px_rgba(162,155,254,0.3)]" },
+];
 
 export function AdminHome() {
   const { records: learners } = useLearners();
   const { records: attendance } = useAttendance();
   const { records: payments } = usePayments();
   const { records: followUps } = useFollowUps();
-  const { records: submissions } = useParentSubmissions();
-  const { records: activities } = useRecentActivity();
+  const { records: forms } = useParentSubmissions();
 
-  const totalLearners = learners.filter(l => l.learnerStatus === "active").length;
-  
-  const today = new Date().toISOString().split("T")[0];
-  const todaysAttendance = attendance.filter(a => a.date === today);
-  const presentToday = todaysAttendance.filter(a => a.status === "present" || a.status === "late").length;
+  const totalLearners = learners.length;
+  const presentToday = attendance.filter((a) => a.status === "present").length;
+  const absentToday = attendance.filter((a) => a.status === "absent").length;
+  const pendingPayments = payments.filter((p) => p.status === "unpaid" || p.status === "overdue" || p.status === "partial").length;
+  const activeFollowUps = followUps.filter((f) => f.status === "pending" || f.status === "urgent").length;
+  const newForms = forms.filter((f) => f.status === "new").length;
 
-  const paymentsPending = payments.filter(p => p.status === "unpaid" || p.status === "partial").length;
-  const newSubmissions = submissions.filter(s => s.status === "new").length;
-
-  // Chart Data preparation
-  const attendanceTrendData = [
-    { name: "Mon", present: 85, absent: 5 },
-    { name: "Tue", present: 88, absent: 2 },
-    { name: "Wed", present: 82, absent: 8 },
-    { name: "Thu", present: 89, absent: 1 },
-    { name: "Fri", present: 90, absent: 0 },
-    { name: "Sat", present: 45, absent: 12 },
-  ]; // Mock data for now to match the beautiful chart visually
-
-  const paymentData = [
-    { name: "Paid", value: payments.filter(p => p.status === "paid").length || 60 },
-    { name: "Unpaid", value: payments.filter(p => p.status === "unpaid").length || 35 },
-    { name: "Overdue", value: payments.filter(p => p.status === "overdue").length || 5 },
+  const dashboardMetrics = [
+    { 
+      label: "Total Learners", 
+      value: totalLearners.toString(), 
+      change: "+12%",
+      trend: "up" as const,
+      gradient: "from-[#6c5ce7] to-[#4834d4]",
+      iconBg: "bg-white/20",
+      icon: GraduationCap,
+    },
+    { 
+      label: "Present Today", 
+      value: presentToday.toString(), 
+      change: "+5%",
+      trend: "up" as const,
+      gradient: "from-[#1dd1a1] to-[#10ac84]",
+      iconBg: "bg-white/20",
+      icon: CheckCircle2,
+    },
+    { 
+      label: "Absent Today", 
+      value: absentToday.toString(), 
+      change: "-3%",
+      trend: "down" as const,
+      gradient: "from-[#ff6b81] to-[#ee5a24]",
+      iconBg: "bg-white/20",
+      icon: XCircle,
+    },
+    { 
+      label: "Payments Pending", 
+      value: pendingPayments.toString(), 
+      change: "+8%",
+      trend: "up" as const,
+      gradient: "from-[#feca57] to-[#f0932b]",
+      iconBg: "bg-white/20",
+      icon: CreditCard,
+    },
+    { 
+      label: "Follow-Ups", 
+      value: activeFollowUps.toString(), 
+      change: "-2",
+      trend: "down" as const,
+      gradient: "from-[#00d2d3] to-[#01a3a4]",
+      iconBg: "bg-white/20",
+      icon: PhoneForwarded,
+    },
+    { 
+      label: "New Forms", 
+      value: newForms.toString(), 
+      change: "+1",
+      trend: "up" as const,
+      gradient: "from-[#a29bfe] to-[#6c5ce7]",
+      iconBg: "bg-white/20",
+      icon: ClipboardList,
+    },
   ];
 
-  // Group learners by programme for the bar chart
-  const programmeCounts = learners.reduce((acc, curr) => {
-    if (curr.programme) {
-      acc[curr.programme] = (acc[curr.programme] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>);
-  
-  const programmeData = Object.entries(programmeCounts).map(([name, count]) => ({
-    name: name.length > 10 ? name.substring(0,10) + '...' : name, 
-    learners: count
-  })).sort((a, b) => b.learners - a.learners).slice(0, 5);
-
-  if (programmeData.length === 0) {
-    // fallback for demo visuals
-    programmeData.push(
-      { name: "Mathematics", learners: 80 },
-      { name: "English", learners: 92 },
-      { name: "Physics", learners: 75 },
-      { name: "Science", learners: 60 }
-    );
-  }
-
   return (
-    <div className="pb-10 pt-4">
-      
-      {/* Top Summary Cards */}
-      <section className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <SummaryCard 
-          title="Total Learners" 
-          value={totalLearners} 
-          icon={GraduationCap} 
-          gradient="bg-gradient-to-r from-orange-400 to-orange-300"
-          shadow="shadow-lg shadow-orange-500/20"
-        />
-        <SummaryCard 
-          title="Present Today" 
-          value={presentToday} 
-          icon={UserCheck} 
-          gradient="bg-gradient-to-r from-indigo-500 to-indigo-400"
-          shadow="shadow-lg shadow-indigo-500/20"
-        />
-        <SummaryCard 
-          title="Payments Pending" 
-          value={paymentsPending} 
-          icon={CreditCard} 
-          gradient="bg-gradient-to-r from-cyan-400 to-cyan-300"
-          shadow="shadow-lg shadow-cyan-500/20"
-        />
-        <SummaryCard 
-          title="New Submissions" 
-          value={newSubmissions} 
-          icon={Inbox} 
-          gradient="bg-gradient-to-r from-[#2B3674] to-[#111C44]"
-          shadow="shadow-lg shadow-slate-900/20"
-        />
-      </section>
-
-      {/* Row 2 */}
-      <section className="grid gap-6 lg:grid-cols-4 mb-8">
-        <Card className="col-span-2 p-6 rounded-3xl border-none shadow-sm flex flex-col justify-between">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-bold text-slate-800 tracking-tight">Attendance Trend</h3>
-            <div className="flex gap-4">
-              <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase"><div className="w-2 h-2 rounded-full bg-emerald-500"></div> Present</span>
-              <span className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase"><div className="w-2 h-2 rounded-full bg-rose-500"></div> Absent</span>
-            </div>
+    <div className="flex flex-col xl:flex-row gap-8">
+      {/* Left Column */}
+      <div className="flex-1 space-y-8">
+        
+        {/* Welcome Banner */}
+        <div className="relative overflow-hidden rounded-[28px] p-8" style={{ background: 'linear-gradient(135deg, #6c5ce7 0%, #4834d4 50%, #6c5ce7 100%)' }}>
+          <div className="relative z-10">
+            <p className="text-white/70 text-[14px] font-medium mb-1">Good morning,</p>
+            <h1 className="text-2xl font-bold text-white mb-2">Welcome back, Admin! 👋</h1>
+            <p className="text-white/60 text-[14px] max-w-md">Here&apos;s what&apos;s happening at your school today. Stay on top of your admin tasks.</p>
           </div>
-          <AttendanceTrendChart data={attendanceTrendData} />
-        </Card>
-
-        <Card className="col-span-1 p-6 rounded-3xl border-none shadow-sm flex flex-col items-center">
-          <div className="w-full flex justify-between items-center mb-2">
-            <h3 className="text-lg font-bold text-slate-800 tracking-tight">Payment Status</h3>
-          </div>
-          <PaymentStatusChart data={paymentData} />
-          <div className="flex justify-center gap-4 mt-6 w-full">
-            <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500"><div className="w-2 h-2 rounded-full bg-[#00C49F]"></div> Paid</span>
-            <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500"><div className="w-2 h-2 rounded-full bg-[#FF8042]"></div> Unpaid</span>
-            <span className="flex items-center gap-1 text-[10px] font-bold text-slate-500"><div className="w-2 h-2 rounded-full bg-[#FFBB28]"></div> Overdue</span>
-          </div>
-        </Card>
-
-        <div className="col-span-1">
-          <DashboardCalendar />
+          {/* Decorative circles */}
+          <div className="absolute -top-10 -right-10 size-40 rounded-full bg-white/5" />
+          <div className="absolute -bottom-8 -right-4 size-28 rounded-full bg-white/[0.08]" />
+          <div className="absolute top-4 right-24 size-16 rounded-full bg-[#ff6b81]/20" />
+          <div className="absolute -bottom-4 left-1/3 size-20 rounded-full bg-[#feca57]/10" />
         </div>
-      </section>
 
-      {/* Row 3 */}
-      <section className="grid gap-6 lg:grid-cols-4">
-        <Card className="col-span-2 p-6 rounded-3xl border-none shadow-sm">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-bold text-slate-800 tracking-tight">Learners by Programme</h3>
-            <div className="flex gap-2">
-               {/* Tiny legend items matching image */}
-               {["#F97316", "#8B5CF6", "#06B6D4", "#1E293B", "#10B981"].map((c, i) => (
-                  <div key={i} className="flex items-center gap-1"><div className="w-2 h-2 rounded-sm" style={{backgroundColor: c}}></div><span className="text-[9px] text-slate-400">Prog{i+1}</span></div>
-               ))}
+        {/* KPI Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-5">
+          {dashboardMetrics.map((metric) => {
+            const Icon = metric.icon;
+            return (
+              <div 
+                key={metric.label} 
+                className={`bg-gradient-to-br ${metric.gradient} p-6 rounded-[24px] flex flex-col justify-between relative overflow-hidden group hover:scale-[1.02] transition-all duration-300 cursor-pointer shadow-lg`}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className={`size-11 rounded-2xl flex items-center justify-center ${metric.iconBg} backdrop-blur-sm`}>
+                    <Icon size={20} className="text-white" />
+                  </div>
+                  <div className="flex items-center gap-1 text-[12px] font-bold px-2.5 py-1 rounded-full bg-white/20 text-white">
+                    {metric.trend === 'up' ? <ArrowUpRight size={12} /> : <ArrowDownRight size={12} />}
+                    {metric.change}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[13px] font-medium text-white/70 mb-1">{metric.label}</p>
+                  <p className="text-[32px] font-bold text-white leading-none">{metric.value}</p>
+                </div>
+                {/* Decorative shape */}
+                <div className="absolute -bottom-6 -right-6 size-24 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors" />
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Quick Actions */}
+        <div>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Quick Actions</h2>
+              <p className="text-[13px] text-slate-400 mt-0.5">Shortcuts to common tasks</p>
             </div>
-          </div>
-          <ProgrammeDistributionChart data={programmeData} />
-        </Card>
-
-        <Card className="col-span-1 p-6 rounded-3xl border-none shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-slate-800 tracking-tight">Follow-Ups</h3>
-            <button className="flex items-center gap-1 text-xs text-slate-500 bg-slate-50 px-2 py-1 rounded-md hover:bg-slate-100">
-              Urgent <ChevronDown size={14} />
+            <button className="text-[#6c5ce7] hover:text-[#4834d4] text-[13px] font-bold flex items-center gap-1 transition-colors">
+              View All <ArrowRight size={14} />
             </button>
           </div>
-          <div className="flex flex-col gap-4">
-            {followUps.slice(0, 3).map((f) => (
-              <div key={f.id} className="flex items-center gap-3 bg-slate-50/50 p-3 rounded-2xl border border-slate-100/50">
-                <div className="size-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm shrink-0 border border-white shadow-sm">
-                  {f.parentName.charAt(0)}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Link
+                  key={action.label}
+                  href={action.href}
+                  className="bg-white border border-slate-100 p-4 rounded-2xl flex items-center gap-3 hover:shadow-lg transition-all duration-300 group hover:-translate-y-0.5"
+                >
+                  <div className={`size-10 rounded-xl flex items-center justify-center shrink-0 bg-gradient-to-br ${action.gradient} ${action.shadow} group-hover:scale-110 transition-transform`}>
+                    <Icon size={18} className="text-white" />
+                  </div>
+                  <span className="text-[14px] font-bold text-slate-800">{action.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div>
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Recent Activity</h2>
+              <p className="text-[13px] text-slate-400 mt-0.5">Stay updated with the latest admin actions.</p>
+            </div>
+            <button className="text-slate-400 hover:text-[#6c5ce7] transition-colors">
+              <MoreHorizontal size={20} />
+            </button>
+          </div>
+          
+          <div className="bg-white rounded-[24px] shadow-sm border border-slate-100 overflow-hidden">
+            {[
+              { time: "10:30 AM", date: "24 Jun, 2026", text: "Attendance marked for Grade 4 Music by Sarah.", views: "12", accentColor: "bg-[#1dd1a1]", icon: CheckSquare },
+              { time: "09:15 AM", date: "24 Jun, 2026", text: "Payment of $150 recorded for Michael Smith.", views: "8", accentColor: "bg-[#6c5ce7]", icon: CreditCard },
+              { time: "Yesterday", date: "23 Jun, 2026", text: "New parent submission received from Jane Doe.", views: "24", accentColor: "bg-[#ff6b81]", icon: ClipboardList },
+              { time: "Yesterday", date: "23 Jun, 2026", text: "Follow-up created for Lucas Brown (Unpaid fees).", views: "5", accentColor: "bg-[#feca57]", icon: PhoneForwarded },
+            ].map((activity, i) => {
+              const ActivityIcon = activity.icon;
+              return (
+                <div key={i} className={`p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#f8f7ff] transition-colors ${i !== 3 ? 'border-b border-slate-50' : ''}`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`size-10 rounded-xl shrink-0 ${activity.accentColor} flex items-center justify-center shadow-sm`}>
+                      <ActivityIcon size={18} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="text-[14px] font-semibold text-slate-800 max-w-sm">{activity.text}</p>
+                      <p className="text-[12px] text-slate-400 font-medium mt-1">{activity.time}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-5 self-start sm:self-auto ml-14 sm:ml-0">
+                    <div className="bg-[#eee9ff] text-[#6c5ce7] text-[12px] font-bold px-3 py-1.5 rounded-full whitespace-nowrap">
+                      {activity.date}
+                    </div>
+                    <div className="flex items-center gap-4 text-slate-400">
+                      <div className="flex items-center gap-1.5 text-[12px] font-medium">
+                        <Eye size={14} /> {activity.views}
+                      </div>
+                      <button className="hover:text-[#6c5ce7] transition-colors">
+                        <MoreHorizontal size={16} />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-slate-800 truncate">{f.parentName}</p>
-                  <p className="text-[11px] font-medium text-slate-400 truncate">For {f.learnerName}</p>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Right Column */}
+      <div className="w-full xl:w-96 shrink-0 space-y-6">
+        <DashboardCalendar />
+        
+        {/* Upcoming Events */}
+        <div className="bg-white rounded-[24px] p-6 shadow-sm border border-slate-100">
+          <h3 className="text-[16px] font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <Calendar size={18} className="text-[#6c5ce7]" />
+            Upcoming Events
+          </h3>
+          <div className="space-y-3">
+            {[
+              { name: "Staff Meeting", time: "Tomorrow, 9:00 AM", color: "bg-[#6c5ce7]" },
+              { name: "Parent-Teacher Day", time: "Jul 8, 2:00 PM", color: "bg-[#ff6b81]" },
+              { name: "Term Exams Begin", time: "Jul 15, 8:00 AM", color: "bg-[#feca57]" },
+            ].map((event, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 rounded-xl hover:bg-[#f8f7ff] transition-colors cursor-pointer">
+                <div className={`w-1 h-10 rounded-full ${event.color}`} />
+                <div>
+                  <p className="text-[14px] font-semibold text-slate-800">{event.name}</p>
+                  <p className="text-[12px] text-slate-400">{event.time}</p>
                 </div>
               </div>
             ))}
-            {followUps.length === 0 && (
-               <p className="text-sm text-slate-400 text-center py-4">No follow-ups needed.</p>
-            )}
           </div>
-        </Card>
+        </div>
 
-        <Card className="col-span-1 p-6 rounded-3xl border-none shadow-sm">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-lg font-bold text-slate-800 tracking-tight">Activity</h3>
-            <Link href="/admin/setup-sprint" className="text-[11px] font-bold text-slate-400 hover:text-orange-500">
-              View All
-            </Link>
+        {/* Support Community Banner */}
+        <div className="rounded-[24px] p-8 text-white relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #ff6b81 0%, #ee5a24 100%)' }}>
+          <div className="relative z-10">
+            <h3 className="text-xl font-bold mb-3 leading-tight">Need help organizing<br/>your school?</h3>
+            <p className="text-white/80 text-[14px] font-medium mb-6 max-w-[200px]">
+              Join the admin community and discover best practices for your dashboard.
+            </p>
+            <button className="bg-white text-[#ee5a24] px-6 py-2.5 rounded-xl text-[13px] font-bold hover:bg-white/90 transition-colors shadow-sm">
+              Explore now
+            </button>
           </div>
-          <div className="flex flex-col gap-4">
-            {activities.slice(0, 3).map((act, i) => (
-              <div key={act.id} className="flex gap-3">
-                <div className={`size-10 rounded-2xl flex items-center justify-center shrink-0 ${i%2===0 ? 'bg-indigo-100 text-indigo-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                   {i%2===0 ? <Users size={18} /> : <CreditCard size={18} />}
-                </div>
-                <div className="min-w-0 flex-1 border-b border-slate-50 pb-4">
-                  <p className="text-sm font-bold text-slate-800 truncate">{act.title}</p>
-                  <p className="text-[11px] text-slate-400 truncate">{act.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </section>
-
+          
+          {/* Abstract background graphics */}
+          <div className="absolute -bottom-10 -right-10 size-48 bg-white/10 rounded-full blur-2xl" />
+          <div className="absolute top-10 -right-4 size-24 bg-white/5 rounded-full" />
+          <div className="absolute -top-6 -left-6 size-20 rounded-full bg-[#feca57]/20" />
+        </div>
+      </div>
     </div>
   );
 }
-
-function SummaryCard({ title, value, icon: Icon, gradient, shadow }: { title: string, value: number | string, icon: React.ElementType, gradient: string, shadow: string }) {
-  return (
-    <div className={`relative overflow-hidden rounded-3xl p-6 ${gradient} ${shadow} text-white flex justify-between items-center group transition-transform hover:-translate-y-1`}>
-      <div className="z-10">
-        <p className="text-3xl font-black mb-1">{value}</p>
-        <p className="text-sm font-medium opacity-90">{title}</p>
-      </div>
-      <div className="size-14 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center z-10">
-        <Icon size={26} className="text-white" strokeWidth={2.5} />
-      </div>
-      {/* Decorative background shapes */}
-      <div className="absolute -right-6 -top-6 size-32 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors" />
-      <div className="absolute -bottom-8 -left-8 size-24 rounded-full bg-black/10 blur-xl" />
-    </div>
-  );
-}
-
-export default AdminHome;

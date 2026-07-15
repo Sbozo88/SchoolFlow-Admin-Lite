@@ -1,12 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { getFirebaseDb, isFirebaseConfigured } from "@/firebase/firebaseConfig";
+import { useSearchParams } from "next/navigation";
+import { createSubmission } from "@/hooks/useParentSubmissions";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { isFirebaseConfigured } from "@/firebase/firebaseConfig";
 
 export default function EnrollPage() {
+  const searchParams = useSearchParams();
+  const tenantId = searchParams?.get("tenantId") || searchParams?.get("tenant") || "";
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -30,17 +34,18 @@ export default function EnrollPage() {
       setError("Firebase is not configured.");
       return;
     }
+    if (!tenantId.trim()) {
+      setError("This enrollment link is missing tenantId. Ask your school for the correct URL.");
+      return;
+    }
 
     setIsSubmitting(true);
     setError("");
 
     try {
-      const db = getFirebaseDb();
-      await addDoc(collection(db, "parentSubmissions"), {
-        ...formValues,
-        status: "new",
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+      await createSubmission(formValues, {
+        tenantId: tenantId.trim(),
+        userId: "public-enroll",
       });
       setSuccess(true);
     } catch (err: unknown) {
@@ -56,7 +61,9 @@ export default function EnrollPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="bg-white p-8 rounded-lg shadow-sm border border-slate-200 max-w-md w-full text-center">
           <h1 className="text-2xl font-black text-slate-900 mb-2">Thank You!</h1>
-          <p className="text-slate-600 mb-6">Your registration has been submitted successfully. We will be in touch with you shortly.</p>
+          <p className="text-slate-600 mb-6">
+            Your registration has been submitted successfully. We will be in touch with you shortly.
+          </p>
           <Button onClick={() => window.location.reload()}>Submit Another</Button>
         </div>
       </div>
@@ -74,36 +81,89 @@ export default function EnrollPage() {
           {error && <p className="bg-rose-50 text-rose-700 p-3 rounded-lg mb-6 font-medium text-sm">{error}</p>}
           <form onSubmit={handleSubmit} className="grid gap-6">
             <fieldset className="grid gap-4">
-              <legend className="text-sm font-bold text-slate-900 mb-2 border-b border-slate-200 w-full pb-1">Learner Details</legend>
+              <legend className="text-sm font-bold text-slate-900 mb-2 border-b border-slate-200 w-full pb-1">
+                Learner Details
+              </legend>
               <div className="grid sm:grid-cols-2 gap-4">
-                <Input label="First Name" required value={formValues.learnerFirstName} onChange={e => setFormValues(prev => ({...prev, learnerFirstName: e.target.value}))} />
-                <Input label="Last Name" required value={formValues.learnerLastName} onChange={e => setFormValues(prev => ({...prev, learnerLastName: e.target.value}))} />
+                <Input
+                  label="First Name"
+                  required
+                  value={formValues.learnerFirstName}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, learnerFirstName: e.target.value }))}
+                />
+                <Input
+                  label="Last Name"
+                  required
+                  value={formValues.learnerLastName}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, learnerLastName: e.target.value }))}
+                />
               </div>
               <div className="grid sm:grid-cols-3 gap-4">
-                <Input label="Class/Grade" required value={formValues.className} onChange={e => setFormValues(prev => ({...prev, className: e.target.value}))} />
-                <Input label="Programme" required value={formValues.programme} onChange={e => setFormValues(prev => ({...prev, programme: e.target.value}))} />
-                <Input label="Instrument/Activity" value={formValues.instrumentOrActivity} onChange={e => setFormValues(prev => ({...prev, instrumentOrActivity: e.target.value}))} />
+                <Input
+                  label="Class/Grade"
+                  required
+                  value={formValues.className}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, className: e.target.value }))}
+                />
+                <Input
+                  label="Programme"
+                  required
+                  value={formValues.programme}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, programme: e.target.value }))}
+                />
+                <Input
+                  label="Instrument/Activity"
+                  value={formValues.instrumentOrActivity}
+                  onChange={(e) =>
+                    setFormValues((prev) => ({ ...prev, instrumentOrActivity: e.target.value }))
+                  }
+                />
               </div>
             </fieldset>
 
             <fieldset className="grid gap-4 mt-2">
-              <legend className="text-sm font-bold text-slate-900 mb-2 border-b border-slate-200 w-full pb-1">Parent/Guardian Details</legend>
-              <Input label="Full Name" required value={formValues.parentName} onChange={e => setFormValues(prev => ({...prev, parentName: e.target.value}))} />
+              <legend className="text-sm font-bold text-slate-900 mb-2 border-b border-slate-200 w-full pb-1">
+                Parent/Guardian Details
+              </legend>
+              <Input
+                label="Full Name"
+                required
+                value={formValues.parentName}
+                onChange={(e) => setFormValues((prev) => ({ ...prev, parentName: e.target.value }))}
+              />
               <div className="grid sm:grid-cols-2 gap-4">
-                <Input label="Phone Number" required type="tel" value={formValues.parentPhone} onChange={e => setFormValues(prev => ({...prev, parentPhone: e.target.value}))} />
-                <Input label="Email Address" type="email" value={formValues.parentEmail} onChange={e => setFormValues(prev => ({...prev, parentEmail: e.target.value}))} />
+                <Input
+                  label="Phone Number"
+                  required
+                  type="tel"
+                  value={formValues.parentPhone}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, parentPhone: e.target.value }))}
+                />
+                <Input
+                  label="Email Address"
+                  type="email"
+                  value={formValues.parentEmail}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, parentEmail: e.target.value }))}
+                />
               </div>
-              <Input label="Emergency Contact (Name & Number)" required value={formValues.emergencyContact} onChange={e => setFormValues(prev => ({...prev, emergencyContact: e.target.value}))} />
+              <Input
+                label="Emergency Contact (Name & Number)"
+                required
+                value={formValues.emergencyContact}
+                onChange={(e) => setFormValues((prev) => ({ ...prev, emergencyContact: e.target.value }))}
+              />
             </fieldset>
 
             <fieldset className="grid gap-4 mt-2">
-              <legend className="text-sm font-bold text-slate-900 mb-2 border-b border-slate-200 w-full pb-1">Additional Information</legend>
+              <legend className="text-sm font-bold text-slate-900 mb-2 border-b border-slate-200 w-full pb-1">
+                Additional Information
+              </legend>
               <label className="grid gap-2 text-sm font-bold text-slate-700">
                 <span>Notes / Message (Optional)</span>
                 <textarea
                   className="w-full min-h-24 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-teal-500 focus:ring-4 focus:ring-teal-100"
                   value={formValues.message}
-                  onChange={e => setFormValues(prev => ({...prev, message: e.target.value}))}
+                  onChange={(e) => setFormValues((prev) => ({ ...prev, message: e.target.value }))}
                 />
               </label>
             </fieldset>

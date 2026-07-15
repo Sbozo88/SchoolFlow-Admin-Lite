@@ -1,24 +1,33 @@
 "use client";
 
-import { School, LockKeyhole } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Button } from "@/components/ui/Button";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
+import Image from "next/image";
 
-function safeNextPath(value: string | null) {
+function safeNextPath(value: string | null, fallback: string) {
   if (value && value.startsWith("/") && !value.startsWith("//")) {
     return value;
   }
-  return "/admin";
+  return fallback;
 }
 
 export function LoginForm() {
-  const { login, loginWithGoogle, resetPassword, user, loading, authError, isConfigured } = useAuth();
+  const {
+    login,
+    loginWithGoogle,
+    resetPassword,
+    user,
+    loading,
+    authError,
+    isConfigured,
+    homePath,
+    workspace,
+  } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = safeNextPath(searchParams?.get("next") ?? null);
+  const requestedNext = searchParams?.get("next") ?? null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -26,17 +35,23 @@ export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!loading && user) {
-      router.replace(nextPath);
+    if (!loading && user && workspace !== "none") {
+      const destination = safeNextPath(requestedNext, homePath);
+      // Platform users landing on /admin without tenant are sent to super-admin unless next is super-admin
+      if (workspace === "platform" && destination.startsWith("/admin") && !destination.startsWith("/super-admin")) {
+        router.replace(homePath);
+      } else {
+        router.replace(destination);
+      }
     }
-  }, [loading, nextPath, router, user]);
+  }, [homePath, loading, requestedNext, router, user, workspace]);
 
   if (isSubmitting || loading) {
     return (
       <div className="w-full max-w-md">
         <BrandedLoading
           title={user ? "Opening admin workspace" : "Signing you in"}
-          detail="Securing your SchoolFlow session and preparing the dashboard."
+          detail="Securing your SchoolFlow Admin session and preparing the dashboard."
         />
       </div>
     );
@@ -49,10 +64,9 @@ export function LoginForm() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      router.replace(nextPath);
+      // Auth state effect will route via homePath/workspace once profile loads
     } catch {
       setError("We could not sign you in. Check the email, password, and admin profile.");
-    } finally {
       setIsSubmitting(false);
     }
   }
@@ -78,92 +92,125 @@ export function LoginForm() {
     setIsSubmitting(true);
     try {
       await loginWithGoogle();
-      router.replace(nextPath);
     } catch {
       setError("Google sign-in is not ready. Enable Google as a Firebase sign-in provider, then try again.");
-    } finally {
       setIsSubmitting(false);
     }
   }
 
   return (
-    <form className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/40 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none" onSubmit={handleSubmit}>
-      <div className="mb-8 text-center">
-        <div className="mx-auto mb-5 flex size-14 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 dark:bg-teal-500/10 dark:text-teal-400">
-          <School size={28} />
+    <form className="flex h-full w-full max-w-sm flex-col justify-between" onSubmit={handleSubmit}>
+      <div>
+        {/* Logo pill */}
+        <div className="mb-10">
+          <div className="inline-flex items-center gap-2 justify-center rounded-full border border-slate-200 bg-white px-5 py-1.5 text-[13px] font-medium text-slate-700 shadow-sm">
+            <Image src="/images/logo.png" alt="SchoolFlow Logo" width={18} height={18} className="object-contain" />
+            <span className="font-bold">SchoolFlow</span> Admin Lite
+          </div>
         </div>
-        <h1 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">SchoolFlow Admin LITE</h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Secure access to your school management dashboard</p>
+
+        {/* Heading */}
+        <div className="mb-10">
+          <h1 className="text-[28px] font-semibold tracking-tight text-slate-900">Welcome back</h1>
+          <p className="mt-1.5 text-[13px] font-medium text-slate-500">Sign in to your admin dashboard</p>
+        </div>
+
+        {!isConfigured ? (
+          <p className="mb-4 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium leading-6 text-amber-800">
+            Firebase credentials are not configured.
+          </p>
+        ) : null}
+
+        {authError ? <p className="mb-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{authError}</p> : null}
+
+        {/* Inputs */}
+        <div className="space-y-5">
+          <div>
+            <label className="mb-1.5 block text-[12px] font-medium text-slate-600" htmlFor="email">
+              Email
+            </label>
+            <input
+              autoComplete="email"
+              className="h-[50px] w-full rounded-full border border-slate-200 bg-slate-50 px-5 text-[14px] text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+              id="email"
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              type="email"
+              value={email}
+              placeholder="admin@school.com"
+            />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-[12px] font-medium text-slate-600" htmlFor="password">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                autoComplete="current-password"
+                className="h-[50px] w-full rounded-full border border-slate-200 bg-slate-50 px-5 text-[14px] text-slate-900 placeholder:text-slate-400 outline-none transition-all focus:border-blue-500 focus:bg-white focus:ring-4 focus:ring-blue-500/10"
+                id="password"
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                type="password"
+                value={password}
+                placeholder="••••••••••••••••"
+              />
+              <button type="button" className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {error ? <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{error}</p> : null}
+        {notice ? <p className="mt-4 rounded-xl bg-teal-50 px-3 py-2 text-sm font-medium text-teal-700">{notice}</p> : null}
+
+        {/* Actions */}
+        <div className="mt-8 space-y-4">
+          <button
+            className="h-[50px] w-full rounded-full bg-blue-600 text-[14px] font-bold text-white shadow-sm shadow-blue-600/20 transition-all hover:bg-blue-700 hover:shadow-md hover:shadow-blue-600/30 focus:ring-4 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!isConfigured || isSubmitting}
+            type="submit"
+          >
+            Submit
+          </button>
+
+          <div className="flex gap-3">
+            <button
+              className="flex h-[48px] w-full items-center justify-center gap-2.5 rounded-full border border-slate-200 bg-white text-[13px] font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50"
+              disabled={!isConfigured || isSubmitting}
+              type="button"
+            >
+              <svg viewBox="0 0 384 512" className="size-4" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.3 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.3zm-110.9-176.2c16.3-21.5 28.5-51.4 25.4-81.5-26.6 1.1-57.6 17.8-74.6 39.1-14.7 18.2-28.8 48.9-24.9 78.4 29.3 2.3 57.8-14.5 74.1-36z"/></svg>
+              Apple
+            </button>
+            <button
+              className="flex h-[48px] w-full items-center justify-center gap-2.5 rounded-full border border-slate-200 bg-white text-[13px] font-semibold text-slate-700 shadow-sm transition-all hover:border-slate-300 hover:bg-slate-50"
+              disabled={!isConfigured || isSubmitting}
+              onClick={handleGoogleLogin}
+              type="button"
+            >
+              <svg viewBox="0 0 24 24" className="size-4"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18A10.96 10.96 0 0 0 1 12c0 1.77.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              Google
+            </button>
+          </div>
+        </div>
       </div>
 
-      {!isConfigured ? (
-        <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm font-medium leading-6 text-amber-800">
-          Firebase credentials are not configured. Add `.env.local` values to enable secure login.
-        </p>
-      ) : null}
-
-      {authError ? <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{authError}</p> : null}
-
-      <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300" htmlFor="email">
-        Email
-      </label>
-      <input
-        autoComplete="email"
-        className="mb-5 h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-teal-500 dark:focus:bg-slate-900 dark:focus:ring-teal-900/30"
-        id="email"
-        onChange={(event) => setEmail(event.target.value)}
-        required
-        type="email"
-        value={email}
-        placeholder="admin@school.com"
-      />
-
-      <label className="mb-2 block text-sm font-bold text-slate-700 dark:text-slate-300" htmlFor="password">
-        Password
-      </label>
-      <input
-        autoComplete="current-password"
-        className="mb-6 h-12 w-full rounded-xl border border-slate-200 bg-slate-50 px-4 text-sm outline-none transition-all focus:border-teal-500 focus:bg-white focus:ring-4 focus:ring-teal-100 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:border-teal-500 dark:focus:bg-slate-900 dark:focus:ring-teal-900/30"
-        id="password"
-        onChange={(event) => setPassword(event.target.value)}
-        required
-        type="password"
-        value={password}
-        placeholder="••••••••"
-      />
-
-      {error ? <p className="mb-4 rounded-lg bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{error}</p> : null}
-      {notice ? <p className="mb-4 rounded-lg bg-teal-50 px-3 py-2 text-sm font-medium text-teal-700">{notice}</p> : null}
-
-      <button
-        className="mb-4 flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm transition-all hover:bg-slate-50 focus:ring-4 focus:ring-slate-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:focus:ring-slate-800"
-        disabled={!isConfigured || isSubmitting}
-        onClick={handleGoogleLogin}
-        type="button"
-      >
-        <span className="flex size-6 items-center justify-center rounded-full bg-slate-100 text-xs font-black text-slate-700 dark:bg-slate-700 dark:text-slate-300">G</span>
-        Continue with Google
-      </button>
-
-      <div className="mb-4 flex items-center gap-3 opacity-60">
-        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-400">or</span>
-        <div className="h-px flex-1 bg-slate-200 dark:bg-slate-700" />
+      {/* Footer */}
+      <div className="mt-10 flex items-center justify-between text-[12px] font-medium text-slate-500">
+        <button
+          className="hover:text-slate-900 disabled:opacity-50 transition-colors"
+          disabled={!isConfigured}
+          onClick={handlePasswordReset}
+          type="button"
+        >
+          Forgot password? <span className="underline decoration-slate-300 underline-offset-2 hover:decoration-slate-400">Reset</span>
+        </button>
+        <a href="#" className="underline decoration-slate-300 underline-offset-2 hover:text-slate-900 hover:decoration-slate-400 transition-colors">Terms &amp; Conditions</a>
       </div>
-
-      <Button className="h-12 w-full rounded-xl text-sm" disabled={!isConfigured || isSubmitting} type="submit">
-        <LockKeyhole size={18} className="mr-2" />
-        Sign In to Workspace
-      </Button>
-
-      <button
-        className="mt-4 w-full text-center text-sm font-bold text-teal-700 hover:text-teal-800 disabled:text-slate-400"
-        disabled={!isConfigured}
-        onClick={handlePasswordReset}
-        type="button"
-      >
-        Reset password
-      </button>
     </form>
   );
 }
+

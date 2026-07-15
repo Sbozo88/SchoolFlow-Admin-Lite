@@ -22,7 +22,7 @@ export function SetupSprintPage() {
 
   function handleCopyReport() {
     const report = `
-*SchoolFlow Lite - Setup Sprint Handover*
+*SchoolFlow Admin Lite - Setup Sprint Handover*
 Status: ${setupStatus}
 Progress: ${progressPercent}% (${completedTasks}/${totalTasks} tasks completed)
 Missing Info Remaining: ${openMissingInfo} items
@@ -32,7 +32,7 @@ Missing Info Remaining: ${openMissingInfo} items
 - Review payment tracking
 - Follow up on missing information
 
-Thank you for completing the SchoolFlow Setup Sprint!
+Thank you for completing the SchoolFlow Admin Lite Setup Sprint!
     `.trim();
 
     navigator.clipboard.writeText(report);

@@ -1,5 +1,1 @@
-import { SetupSprintPage } from "@/views/admin/SetupSprintPage";
-
-export default function AdminSetupSprintRoute() {
-  return <SetupSprintPage />;
-}
+export { default } from "@/views/admin/SetupSprintPage";

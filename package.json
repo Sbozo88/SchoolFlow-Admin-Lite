@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "tsx --tsconfig tsconfig.json --test src/lib/saas.test.ts",
+    "deploy": "npm run build && firebase deploy --project schoolflow-admin-lite --non-interactive",
+    "deploy:hosting": "npm run build && firebase deploy --only hosting --project schoolflow-admin-lite --non-interactive"
   },
   "dependencies": {
     "firebase": "^12.13.0",
@@ -29,6 +32,7 @@
     "eslint-config-next": "15.5.18",
     "eslint-plugin-react-hooks": "^7.1.1",
     "tailwindcss": "^4",
+    "tsx": "^4.23.1",
     "typescript": "^5"
   }
 }

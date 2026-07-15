@@ -11,7 +11,7 @@ export function PublicLayout({ children }: { children: React.ReactNode }) {
             <span className="flex size-10 items-center justify-center rounded-lg bg-slate-950 text-white">
               <ShieldCheck size={20} />
             </span>
-            <span className="text-lg font-black">SchoolFlow Admin LITE</span>
+            <span className="text-lg font-black">SchoolFlow Admin Lite</span>
           </Link>
           <div className="flex items-center gap-2">
             <ThemeToggle />

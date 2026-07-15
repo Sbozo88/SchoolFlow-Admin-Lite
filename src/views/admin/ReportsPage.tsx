@@ -26,7 +26,7 @@ export function ReportsPage() {
 
   const handleDownload = () => {
     const reportText = `
-SchoolFlow Lite - Monthly Summary Report
+SchoolFlow Admin Lite - Monthly Summary Report
 Date: ${new Date().toLocaleDateString()}
 ----------------------------------------
 Total Active Learners: ${totalLearners}
@@ -92,7 +92,7 @@ Total Outstanding Fees: ${formatCurrency(totalOutstanding)}
           Ready for more?
         </h2>
         <p className="text-slate-300 mt-2 max-w-2xl">
-          SchoolFlow Lite provides these essential metrics to keep your administration on track. 
+          SchoolFlow Admin Lite provides these essential metrics to keep your administration on track. 
           If you need advanced reporting, multi-branch analytics, or automated PDF generation, 
           contact us to upgrade to SchoolFlow Pro.
         </p>

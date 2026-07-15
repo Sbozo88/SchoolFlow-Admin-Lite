@@ -1,0 +1,77 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { collection, onSnapshot, query, limit } from "firebase/firestore";
+import { getFirebaseDb, isFirebaseConfigured } from "@/firebase/firebaseConfig";
+import { Card } from "@/components/ui/Card";
+
+type PlatformUserRow = {
+  id: string;
+  email?: string;
+  displayName?: string;
+  role?: string;
+  platformRole?: string;
+  tenantId?: string;
+  status?: string;
+};
+
+export default function SuperAdminUsersPage() {
+  const [users, setUsers] = useState<PlatformUserRow[]>([]);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return undefined;
+    const q = query(collection(getFirebaseDb(), "users"), limit(100));
+    return onSnapshot(
+      q,
+      (snap) => setUsers(snap.docs.map((d) => ({ id: d.id, ...d.data() }) as PlatformUserRow)),
+      () => setError("Could not load users (platform role required)."),
+    );
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-black text-slate-900">Platform & client users</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Super Admins, support staff, and client administrators (from users collection).
+        </p>
+      </div>
+      {error && <p className="text-sm text-rose-600">{error}</p>}
+      <Card className="overflow-hidden">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-slate-50 text-xs uppercase text-slate-500">
+            <tr>
+              <th className="px-4 py-3">User</th>
+              <th className="px-4 py-3">Platform role</th>
+              <th className="px-4 py-3">Tenant role</th>
+              <th className="px-4 py-3">Tenant</th>
+              <th className="px-4 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {users.map((u) => (
+              <tr key={u.id}>
+                <td className="px-4 py-3">
+                  <p className="font-bold">{u.displayName || u.email || u.id}</p>
+                  <p className="text-xs text-slate-500">{u.email}</p>
+                </td>
+                <td className="px-4 py-3 text-xs font-semibold">{u.platformRole || "—"}</td>
+                <td className="px-4 py-3 text-xs font-semibold">{u.role || "—"}</td>
+                <td className="px-4 py-3 font-mono text-[11px]">{u.tenantId || "—"}</td>
+                <td className="px-4 py-3 text-xs">{u.status || "—"}</td>
+              </tr>
+            ))}
+            {users.length === 0 && (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
+                  No user profiles visible.
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </Card>
+    </div>
+  );
+}

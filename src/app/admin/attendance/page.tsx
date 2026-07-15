@@ -1,5 +1,1 @@
-import { AttendancePage } from "@/views/admin/AttendancePage";
-
-export default function AdminAttendanceRoute() {
-  return <AttendancePage />;
-}
+export { default } from "@/views/admin/AttendancePage";

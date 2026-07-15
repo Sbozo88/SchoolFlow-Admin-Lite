@@ -1,7 +1,7 @@
 import { SchoolFlowLogo } from "@/components/ui/SchoolFlowLogo";
 
 export function BrandedLoading({
-  title = "Loading SchoolFlow",
+  title = "Loading SchoolFlow Admin Lite",
   detail = "Preparing your admin workspace.",
   fullScreen = false,
 }: {
@@ -26,7 +26,7 @@ export function BrandedLoading({
             <SchoolFlowLogo />
           </div>
         </div>
-        <p className="text-xs font-black uppercase tracking-[0.28em] text-teal-200">SchoolFlow Admin LITE</p>
+        <p className="text-xs font-black uppercase tracking-[0.28em] text-teal-200">SchoolFlow Admin Lite</p>
         <h1 className="mt-3 text-2xl font-black tracking-tight">{title}</h1>
         <p className="mx-auto mt-2 max-w-xs text-sm leading-6 text-slate-300">{detail}</p>
         <div className="mx-auto mt-6 h-1.5 w-48 overflow-hidden rounded-full bg-white/10">

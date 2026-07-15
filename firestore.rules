@@ -10,84 +10,273 @@ service cloud.firestore {
       return /databases/$(database)/documents/users/$(request.auth.uid);
     }
 
+    function userDoc() {
+      return get(userPath()).data;
+    }
+
+    function hasUserDoc() {
+      return signedIn() && exists(userPath());
+    }
+
+    function isPlatform() {
+      return hasUserDoc()
+        && userDoc().platformRole in ['super_admin', 'platform_support', 'platform_manager'];
+    }
+
+    function isSuperAdmin() {
+      return hasUserDoc() && userDoc().platformRole == 'super_admin';
+    }
+
+    function isPlatformManager() {
+      return hasUserDoc() && userDoc().platformRole in ['super_admin', 'platform_manager'];
+    }
+
+    function userTenantId() {
+      return hasUserDoc() ? userDoc().tenantId : null;
+    }
+
+    function isTenantMember(tid) {
+      return hasUserDoc() && userTenantId() == tid;
+    }
+
+    function tenantRole() {
+      return hasUserDoc() ? userDoc().role : null;
+    }
+
+    function canMutateTenantData() {
+      return tenantRole() in ['admin', 'client_admin', 'manager', 'dispatcher', 'finance'];
+    }
+
+    function resourceTenantId() {
+      return resource.data.tenantId;
+    }
+
+    function requestTenantId() {
+      return request.resource.data.tenantId;
+    }
+
+    function sameTenantOnWrite() {
+      return requestTenantId() == userTenantId();
+    }
+
+    function tenantMetaOnCreate() {
+      return request.resource.data.keys().hasAll(['tenantId', 'createdBy', 'createdAt', 'updatedAt'])
+        && request.resource.data.tenantId is string
+        && request.resource.data.tenantId.size() > 0
+        && request.resource.data.createdBy is string;
+    }
+
+    // Legacy admin without platformRole
+    function isLegacyAdmin() {
+      return hasUserDoc() && userDoc().role == 'admin' && !('platformRole' in userDoc().keys() || userDoc().platformRole == null || userDoc().platformRole == '');
+    }
+
     function isAdmin() {
       return signedIn()
-        && exists(userPath())
-        && get(userPath()).data.role == "admin";
+        && hasUserDoc()
+        && (userDoc().role == 'admin' || userDoc().role == 'client_admin' || isPlatform());
     }
 
     match /users/{userId} {
-      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
-      allow create, update, delete: if isAdmin();
+      allow read: if signedIn() && (request.auth.uid == userId || isPlatform() || (hasUserDoc() && resource.data.tenantId == userTenantId()));
+      allow create, update: if isPlatform() || (signedIn() && request.auth.uid == userId && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role', 'platformRole', 'tenantId']));
+      allow delete: if isSuperAdmin();
+    }
+
+    match /tenants/{tenantId} {
+      allow read: if isPlatform() || isTenantMember(tenantId);
+      allow create, update, delete: if isPlatformManager();
+    }
+
+    match /tenantRoles/{documentId} {
+      allow read: if isPlatform() || (hasUserDoc() && resource.data.tenantId == userTenantId());
+      allow write: if isPlatformManager();
+    }
+
+    match /tenantSubscriptions/{documentId} {
+      allow read: if isPlatform() || (hasUserDoc() && resource.data.tenantId == userTenantId());
+      allow write: if isPlatformManager();
+    }
+
+    match /invitations/{documentId} {
+      allow read: if isPlatform();
+      allow write: if isPlatform();
+    }
+
+    match /pendingAdmins/{documentId} {
+      allow read, write: if isPlatform();
+    }
+
+    match /billingInvoices/{documentId} {
+      allow read: if isPlatform() || (hasUserDoc() && resource.data.tenantId == userTenantId());
+      allow write: if isPlatformManager();
+    }
+
+    match /auditLogs/{documentId} {
+      allow read: if isPlatform();
+      allow create: if signedIn();
+      allow update, delete: if false;
+    }
+
+    match /platformStats/{documentId} {
+      allow read, write: if isPlatform();
+    }
+
+    function tenantScopedRead() {
+      return isPlatform() || (hasUserDoc() && resource.data.tenantId == userTenantId());
+    }
+
+    function tenantScopedCreate() {
+      return (isPlatform() && isSuperAdmin())
+        || (hasUserDoc() && canMutateTenantData() && sameTenantOnWrite() && tenantMetaOnCreate());
+    }
+
+    function tenantScopedUpdate() {
+      return (isPlatform() && isSuperAdmin())
+        || (hasUserDoc() && canMutateTenantData()
+          && resource.data.tenantId == userTenantId()
+          && request.resource.data.tenantId == resource.data.tenantId);
+    }
+
+    function tenantScopedDelete() {
+      return (isPlatform() && isSuperAdmin())
+        || (hasUserDoc() && canMutateTenantData() && resource.data.tenantId == userTenantId());
     }
 
     match /schools/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /students/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /learners/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /attendance/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /invoices/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /payments/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /messageQueue/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /routes/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /parentReports/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /followUps/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /reports/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /settings/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
+    }
+
+    match /organizationSettings/{document=**} {
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /parentSubmissions/{document=**} {
-      allow create: if true;
-      allow read, update, delete: if isAdmin();
+      // Public intake: create requires tenantId + meta; no auth required
+      allow create: if request.resource.data.tenantId is string
+        && request.resource.data.tenantId.size() > 0
+        && request.resource.data.keys().hasAll(['tenantId', 'createdBy', 'createdAt', 'updatedAt']);
+      allow read: if tenantScopedRead();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /setupSprintTasks/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /missingInfoItems/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /supportChecks/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /programmeSettings/{document=**} {
-      allow read, write: if isAdmin();
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
+    }
+
+    match /recentActivity/{document=**} {
+      allow read: if tenantScopedRead();
+      allow create: if tenantScopedCreate();
+      allow update: if tenantScopedUpdate();
+      allow delete: if tenantScopedDelete();
     }
 
     match /{document=**} {
