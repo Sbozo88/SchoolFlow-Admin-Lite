@@ -1,10 +1,9 @@
 "use client";
 
-import { LogOut, ShieldCheck } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
-import { Button } from "@/components/ui/Button";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
 
 export function AccountMenu({
@@ -26,13 +25,19 @@ export function AccountMenu({
     platformRole?.replace(/_/g, " ") ||
     tenantRole?.replace(/_/g, " ") ||
     role ||
-    "signed in";
+    "Admin";
   const displayName =
     profile?.displayName ||
     user.displayName ||
     user.email?.split("@")[0] ||
     "User";
   const email = profile?.email || user.email || "";
+  const initials = displayName
+    .split(/\s+/)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
 
   async function handleLogout() {
     setIsSigningOut(true);
@@ -56,34 +61,33 @@ export function AccountMenu({
         </div>
       ) : null}
       <div
-        className={`flex flex-wrap items-center gap-2 ${
+        className={`flex items-center gap-2.5 ${
           compact
-            ? "rounded-xl border border-slate-100 bg-slate-50 px-2.5 py-1.5"
-            : "rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm"
+            ? "rounded-full border border-slate-100 bg-white py-1.5 pl-1.5 pr-2 shadow-sm"
+            : "rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm"
         } ${className}`}
       >
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#6c5ce7]/10 text-[#6c5ce7]">
-            <ShieldCheck size={16} />
-          </div>
-          <div className="min-w-0">
-            <p className="max-w-[160px] truncate text-[13px] font-bold text-slate-900">{displayName}</p>
-            <p className="max-w-[180px] truncate text-[11px] font-medium capitalize text-[#6c5ce7]">
-              {displayRole}
-              {email ? ` · ${email}` : ""}
-            </p>
-          </div>
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7] text-[12px] font-bold text-white shadow-sm ring-2 ring-[#6c5ce7]/15">
+          {initials || "SF"}
         </div>
-        <Button
-          className="h-9 shrink-0 px-3"
+        <div className="min-w-0 hidden sm:block">
+          <p className="max-w-[140px] truncate text-[13px] font-bold leading-tight text-slate-900">
+            {displayName}
+          </p>
+          <p className="max-w-[160px] truncate text-[11px] font-medium capitalize leading-tight text-[#6c5ce7]">
+            {displayRole}
+            {email ? ` · ${email}` : ""}
+          </p>
+        </div>
+        <button
+          type="button"
           disabled={isSigningOut}
           onClick={handleLogout}
-          type="button"
-          variant="ghost"
+          className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-bold text-slate-500 transition-colors hover:bg-[#eee9ff] hover:text-[#6c5ce7] disabled:opacity-50"
         >
-          <LogOut size={15} />
-          <span className="hidden sm:inline">Sign out</span>
-        </Button>
+          <LogOut size={14} />
+          <span className="hidden md:inline">Sign out</span>
+        </button>
       </div>
     </>
   );

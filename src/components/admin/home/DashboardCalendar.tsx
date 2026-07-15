@@ -11,10 +11,13 @@ export function DashboardCalendar() {
   ];
 
   return (
-    <div className="rounded-[24px] p-6 text-white shadow-lg overflow-hidden relative" style={{ background: 'linear-gradient(135deg, #6c5ce7 0%, #4834d4 100%)' }}>
-      <div className="flex items-center justify-between mb-6 relative z-10">
-        <h3 className="font-bold text-lg">Event Calendar</h3>
-        <button className="text-white/60 hover:text-white transition-colors">
+    <div
+      className="relative overflow-hidden rounded-[28px] p-6 text-white shadow-[0_12px_32px_rgba(72,52,212,0.22)]"
+      style={{ background: "linear-gradient(160deg, #7c6cf0 0%, #5b4bdb 55%, #4834d4 100%)" }}
+    >
+      <div className="relative z-10 mb-5 flex items-center justify-between">
+        <h3 className="text-lg font-bold tracking-tight">Event Calendar</h3>
+        <button type="button" className="text-white/60 transition-colors hover:text-white" aria-label="Calendar menu">
           <div className="flex gap-1">
             <span className="size-1.5 rounded-full bg-current" />
             <span className="size-1.5 rounded-full bg-current" />
@@ -23,11 +26,17 @@ export function DashboardCalendar() {
         </button>
       </div>
 
-      <div className="bg-white/10 backdrop-blur-sm p-1 rounded-2xl flex mb-6 relative z-10">
-        <button className="flex-1 bg-[#ff6b81] text-white py-2 rounded-xl text-[13px] font-bold shadow-sm">
+      <div className="relative z-10 mb-6 flex rounded-2xl bg-white/12 p-1 backdrop-blur-sm">
+        <button
+          type="button"
+          className="flex-1 rounded-xl bg-[#ff6b81] py-2.5 text-[13px] font-bold text-white shadow-sm shadow-[#ff6b81]/30"
+        >
           Day to day
         </button>
-        <button className="flex-1 text-white/70 py-2 rounded-xl text-[13px] font-bold hover:text-white transition-colors">
+        <button
+          type="button"
+          className="flex-1 rounded-xl py-2.5 text-[13px] font-bold text-white/70 transition-colors hover:text-white"
+        >
           Full Month
         </button>
       </div>

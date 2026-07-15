@@ -468,6 +468,47 @@ describe("audit + billing + lifecycle", () => {
   });
 });
 
+describe("school client dashboard presentation (UI reference)", () => {
+  it("exposes reference nav, KPI labels, and quick-action hrefs from shipped constants", async () => {
+    const {
+      schoolPrimaryNavLabels,
+      schoolSupportNavLabels,
+      SCHOOL_KPI_LABELS,
+      schoolQuickActionHrefs,
+      SCHOOL_UPCOMING_EVENTS,
+      SCHOOL_PRIMARY_NAV,
+      SCHOOL_QUICK_ACTIONS,
+    } = await import("@/components/admin/dashboardPresentation");
+
+    assert.deepEqual(schoolPrimaryNavLabels(), [
+      "Dashboard",
+      "Learners",
+      "Attendance",
+      "Payments",
+      "Parent Follow-Ups",
+      "Reports",
+      "Parent Form",
+      "Settings",
+    ]);
+    assert.deepEqual(schoolSupportNavLabels(), ["Setup Sprint", "Handover", "Monthly Support"]);
+    assert.deepEqual([...SCHOOL_KPI_LABELS], [
+      "Total Learners",
+      "Present Today",
+      "Absent Today",
+      "Payments Pending",
+      "Follow-Ups",
+      "New Forms",
+    ]);
+    assert.ok(schoolQuickActionHrefs().every((href) => href.startsWith("/admin")));
+    assert.equal(SCHOOL_QUICK_ACTIONS[0].label, "Add Learner");
+    assert.equal(SCHOOL_QUICK_ACTIONS[1].label, "Mark Attendance");
+    assert.equal(SCHOOL_QUICK_ACTIONS[2].label, "Record Payment");
+    assert.equal(SCHOOL_PRIMARY_NAV[0].href, "/admin");
+    assert.equal(SCHOOL_UPCOMING_EVENTS.length, 3);
+    assert.equal(SCHOOL_UPCOMING_EVENTS[0].name, "Staff Meeting");
+  });
+});
+
 describe("demo platform bootstrap (Super Admin + two schools)", () => {
   it("builds platform-only Super Admin and two distinct school tenants with stamped demo data", async () => {
     const {
