@@ -1,13 +1,11 @@
 # dependencies
 node_modules/
 
-# next.js
-.next/
-out/
-
 # production
 build/
 dist/
+test-results/
+playwright-report/
 
 # firebase
 .firebase/
@@ -31,4 +29,3 @@ npm-debug.log*
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts

@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import {
   Building2,
@@ -26,8 +25,8 @@ const nav = [
 ];
 
 export function SuperAdminLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const router = useRouter();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { profile, logout, platformRole } = useAuth();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
@@ -35,7 +34,7 @@ export function SuperAdminLayout({ children }: { children: React.ReactNode }) {
     setIsSigningOut(true);
     try {
       await logout();
-      router.replace("/login");
+      navigate("/login", { replace: true });
     } catch {
       setIsSigningOut(false);
     }
@@ -68,7 +67,7 @@ export function SuperAdminLayout({ children }: { children: React.ReactNode }) {
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                to={item.href}
                 className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition ${
                   active ? "bg-white/15 text-white" : "text-slate-300 hover:bg-white/10 hover:text-white"
                 }`}
@@ -97,7 +96,7 @@ export function SuperAdminLayout({ children }: { children: React.ReactNode }) {
             {nav.map((item) => (
               <Link
                 key={item.href}
-                href={item.href}
+                to={item.href}
                 className="whitespace-nowrap text-xs font-bold text-slate-600"
               >
                 {item.label}

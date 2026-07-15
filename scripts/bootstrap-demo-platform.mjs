@@ -6,7 +6,6 @@
  *   node scripts/bootstrap-demo-platform.mjs
  *   node scripts/bootstrap-demo-platform.mjs --json
  */
-import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";

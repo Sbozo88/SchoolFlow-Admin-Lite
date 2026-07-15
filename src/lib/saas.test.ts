@@ -320,13 +320,13 @@ describe("firestore composite indexes", () => {
 describe("admin route live wiring (structural)", () => {
   it("primary admin pages re-export live views", () => {
     const routes = [
-      "src/app/admin/learners/page.tsx",
-      "src/app/admin/attendance/page.tsx",
-      "src/app/admin/payments/page.tsx",
-      "src/app/admin/parent-follow-ups/page.tsx",
-      "src/app/admin/parent-form/page.tsx",
-      "src/app/admin/reports/page.tsx",
-      "src/app/admin/settings/page.tsx",
+      "src/routes/admin/learners/page.tsx",
+      "src/routes/admin/attendance/page.tsx",
+      "src/routes/admin/payments/page.tsx",
+      "src/routes/admin/parent-follow-ups/page.tsx",
+      "src/routes/admin/parent-form/page.tsx",
+      "src/routes/admin/reports/page.tsx",
+      "src/routes/admin/settings/page.tsx",
     ];
     for (const route of routes) {
       const src = readFileSync(join(process.cwd(), route), "utf8");

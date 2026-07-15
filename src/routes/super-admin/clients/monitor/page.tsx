@@ -1,14 +1,13 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { Link, useSearchParams } from "react-router-dom";
 import { usePlatformTenants } from "@/hooks/usePlatformTenants";
 import { Card } from "@/components/ui/Card";
 import { useTenant } from "@/components/tenant/TenantProvider";
-import Link from "next/link";
 
 export default function ClientMonitorPage() {
-  const searchParams = useSearchParams();
-  const tenantId = searchParams?.get("tenantId") ?? "";
+  const [searchParams] = useSearchParams();
+  const tenantId = searchParams.get("tenantId") ?? "";
   const { tenants } = usePlatformTenants();
   const { startImpersonation } = useTenant();
   const tenant = tenants.find((t) => t.id === tenantId);
@@ -71,7 +70,7 @@ export default function ClientMonitorPage() {
         >
           Open client workspace (impersonate)
         </button>
-        <Link href="/super-admin/audit" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold">
+        <Link to="/super-admin/audit" className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-bold">
           View audit logs
         </Link>
       </div>

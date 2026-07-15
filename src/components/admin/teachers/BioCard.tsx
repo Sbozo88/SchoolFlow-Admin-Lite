@@ -11,7 +11,6 @@ export function BioCard() {
       <div className="relative mb-6">
         <div className="size-32 rounded-full p-1 border-[3px] border-[#4f5b7d] border-l-transparent border-t-transparent -rotate-45">
           <div className="size-full rounded-full overflow-hidden rotate-45 border-4 border-white">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="https://i.pravatar.cc/150?u=carla" alt="Carla Peter" className="w-full h-full object-cover" />
           </div>
         </div>

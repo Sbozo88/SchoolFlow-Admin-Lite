@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { ShieldCheck, CheckCircle2 } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { createSubmission } from "@/hooks/useParentSubmissions";
 
 export function ParentFormView() {
-  const searchParams = useSearchParams();
-  const tenantId = searchParams?.get("tenantId") || searchParams?.get("tenant") || "";
+  const [searchParams] = useSearchParams();
+  const tenantId = searchParams.get("tenantId") || searchParams.get("tenant") || "";
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);

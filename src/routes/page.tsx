@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
 
@@ -11,24 +11,24 @@ import { BrandedLoading } from "@/components/ui/BrandedLoading";
  */
 export default function Home() {
   const { user, loading, isConfigured, homePath, workspace } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!isConfigured) {
-      router.replace("/login");
+      navigate("/login", { replace: true });
       return;
     }
     if (loading) return;
     if (!user) {
-      router.replace("/login");
+      navigate("/login", { replace: true });
       return;
     }
     if (workspace === "none") {
-      router.replace("/login");
+      navigate("/login", { replace: true });
       return;
     }
-    router.replace(homePath);
-  }, [homePath, isConfigured, loading, router, user, workspace]);
+    navigate(homePath, { replace: true });
+  }, [homePath, isConfigured, loading, navigate, user, workspace]);
 
   return (
     <BrandedLoading

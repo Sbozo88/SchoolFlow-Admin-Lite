@@ -1,15 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "react-router-dom";
 import { createSubmission } from "@/hooks/useParentSubmissions";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { isFirebaseConfigured } from "@/firebase/firebaseConfig";
 
 export default function EnrollPage() {
-  const searchParams = useSearchParams();
-  const tenantId = searchParams?.get("tenantId") || searchParams?.get("tenant") || "";
+  const [searchParams] = useSearchParams();
+  const tenantId = searchParams.get("tenantId") || searchParams.get("tenant") || "";
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);

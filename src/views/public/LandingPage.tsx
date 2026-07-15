@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { PublicLayout } from "@/components/layout/PublicLayout";
 import { Button } from "@/components/ui/Button";
 
@@ -12,7 +12,7 @@ export function LandingPage() {
             A focused operations shell for learner administration, attendance, payments, follow-ups, and reporting.
           </p>
           <div className="mt-7 flex flex-wrap gap-3">
-            <Link href="/login">
+            <Link to="/login">
               <Button type="button">Admin login</Button>
             </Link>
           </div>

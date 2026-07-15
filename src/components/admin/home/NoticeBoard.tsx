@@ -57,7 +57,6 @@ export function NoticeBoard() {
             
             {/* Image Placeholder */}
             <div className="size-10 rounded-xl overflow-hidden shrink-0 border border-slate-100 bg-slate-50">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`https://i.pravatar.cc/150?u=notice${i}`} alt="Notice" className="w-full h-full object-cover" />
             </div>
 

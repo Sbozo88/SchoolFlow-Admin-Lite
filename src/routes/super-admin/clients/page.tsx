@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { usePlatformTenants } from "@/hooks/usePlatformTenants";
 import { useTenant } from "@/components/tenant/TenantProvider";
 import { SUBSCRIPTION_PLANS } from "@/lib/billing/plans";
@@ -181,7 +181,7 @@ export default function SuperAdminClientsPage() {
                       </button>
                       <Link
                         className="rounded bg-slate-100 px-2 py-1 text-[11px] font-bold"
-                        href={`/super-admin/clients/monitor?tenantId=${encodeURIComponent(t.id)}`}
+                        to={`/super-admin/clients/monitor?tenantId=${encodeURIComponent(t.id)}`}
                       >
                         Monitor
                       </Link>

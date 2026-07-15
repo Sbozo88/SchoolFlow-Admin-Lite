@@ -64,11 +64,8 @@ export function GroupsWidget() {
             + Create New Group
           </button>
           <div className="flex -space-x-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="size-8 rounded-full border-2 border-white object-cover" src="https://i.pravatar.cc/150?u=1" alt="" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="size-8 rounded-full border-2 border-white object-cover" src="https://i.pravatar.cc/150?u=2" alt="" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="size-8 rounded-full border-2 border-white object-cover" src="https://i.pravatar.cc/150?u=3" alt="" />
           </div>
         </div>

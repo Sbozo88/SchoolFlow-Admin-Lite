@@ -1,7 +1,6 @@
 {
   "hosting": {
-    "public": "out",
-    "trailingSlash": true,
+    "public": "dist",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "headers": [
       {
@@ -14,7 +13,7 @@
         ]
       },
       {
-        "source": "/_next/static/**",
+        "source": "/assets/**",
         "headers": [
           {
             "key": "Cache-Control",
@@ -22,7 +21,8 @@
           }
         ]
       }
-    ]
+    ],
+    "rewrites": [{ "source": "**", "destination": "/index.html" }]
   },
   "firestore": {
     "rules": "firestore.rules",

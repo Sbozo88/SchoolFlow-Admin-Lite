@@ -17,7 +17,6 @@ export function LoginPage() {
       <div className="relative hidden w-full md:flex md:w-[56%]">
         <div className="relative h-full w-full overflow-hidden bg-slate-900">
             {/* Background Image */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/login-bg.png"
               alt="School Admin Team"

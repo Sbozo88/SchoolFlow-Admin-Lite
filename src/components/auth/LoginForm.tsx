@@ -1,11 +1,10 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
 import { DEMO_SCHOOL_DEFINITIONS, DEMO_SCHOOL_PASSWORD } from "@/lib/provision/bootstrapDemoPlatform";
-import Image from "next/image";
 
 function safeNextPath(value: string | null, fallback: string) {
   if (value && value.startsWith("/") && !value.startsWith("//")) {
@@ -26,9 +25,9 @@ export function LoginForm() {
     homePath,
     workspace,
   } = useAuth();
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const requestedNext = searchParams?.get("next") ?? null;
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const requestedNext = searchParams.get("next");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -40,12 +39,12 @@ export function LoginForm() {
       const destination = safeNextPath(requestedNext, homePath);
       // Platform users landing on /admin without tenant are sent to super-admin unless next is super-admin
       if (workspace === "platform" && destination.startsWith("/admin") && !destination.startsWith("/super-admin")) {
-        router.replace(homePath);
+        navigate(homePath, { replace: true });
       } else {
-        router.replace(destination);
+        navigate(destination, { replace: true });
       }
     }
-  }, [homePath, loading, requestedNext, router, user, workspace]);
+  }, [homePath, loading, navigate, requestedNext, user, workspace]);
 
   if (isSubmitting || loading) {
     return (
@@ -105,7 +104,7 @@ export function LoginForm() {
         {/* Logo pill */}
         <div className="mb-10">
           <div className="inline-flex items-center gap-2 justify-center rounded-full border border-slate-200 bg-white px-5 py-1.5 text-[13px] font-medium text-slate-700 shadow-sm">
-            <Image src="/images/logo.png" alt="SchoolFlow Logo" width={18} height={18} className="object-contain" />
+            <img src="/images/logo.png" alt="SchoolFlow Logo" width={18} height={18} className="object-contain" />
             <span className="font-bold">SchoolFlow</span> Admin Lite
           </div>
         </div>
@@ -228,4 +227,3 @@ export function LoginForm() {
     </form>
   );
 }
-

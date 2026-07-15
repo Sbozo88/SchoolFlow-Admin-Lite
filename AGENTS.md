@@ -1,5 +1,12 @@
 # Agent / automation notes — SchoolFlow Admin LITE
 
+## Application stack
+
+- React 19 + Vite + React Router
+- Firebase Hosting serves the `dist/` SPA with a catch-all rewrite
+- Use `VITE_FIREBASE_*` in local application environments
+- Do not reintroduce Next.js or App Router conventions
+
 ## Auto GitHub + Firebase
 
 After meaningful code changes in this repo:

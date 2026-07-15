@@ -1,7 +1,7 @@
 "use client";
 
 import { LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
@@ -14,7 +14,7 @@ export function AccountMenu({
   className?: string;
 }) {
   const { user, role, platformRole, tenantRole, profile, logout, isConfigured } = useAuth();
-  const router = useRouter();
+  const navigate = useNavigate();
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   if (!isConfigured || !user) {
@@ -43,7 +43,7 @@ export function AccountMenu({
     setIsSigningOut(true);
     try {
       await logout();
-      router.replace("/login");
+      navigate("/login", { replace: true });
     } catch {
       setIsSigningOut(false);
     }

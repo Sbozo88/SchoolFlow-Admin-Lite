@@ -17,11 +17,8 @@ export function CommunityBanner() {
       <div className="absolute -bottom-4 -right-4 w-[280px] h-[200px] opacity-90">
         <div className="w-full h-full bg-white/5 rounded-tl-full flex items-end justify-end p-4">
            <div className="flex -space-x-2 absolute bottom-8 left-8">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="size-8 rounded-full border-2 border-white/30 object-cover" src="https://i.pravatar.cc/150?u=c1" alt="" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="size-8 rounded-full border-2 border-white/30 object-cover" src="https://i.pravatar.cc/150?u=c2" alt="" />
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img className="size-8 rounded-full border-2 border-white/30 object-cover" src="https://i.pravatar.cc/150?u=c3" alt="" />
             <div className="flex size-8 items-center justify-center rounded-full bg-[#6c5ce7] border-2 border-white/30 text-[10px] font-bold text-white">+3k</div>
           </div>

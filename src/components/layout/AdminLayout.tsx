@@ -2,9 +2,7 @@
 
 import { useState } from "react";
 import { Bell, Menu, Search, Shield, X } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Link, useLocation } from "react-router-dom";
 import { AccountMenu } from "@/components/auth/AccountMenu";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -17,7 +15,7 @@ export function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const pathname = usePathname();
+  const { pathname } = useLocation();
   const { profile, user, platformRole } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -56,7 +54,7 @@ export function AdminLayout({
         <div className="flex h-[76px] items-center justify-between px-6">
           <div className="flex items-center gap-3">
             <div className="flex size-10 items-center justify-center rounded-2xl bg-white/20 p-2 shadow-inner backdrop-blur-sm ring-1 ring-white/20">
-              <Image
+              <img
                 src="/images/logo.png"
                 alt="SchoolFlow Logo"
                 width={22}
@@ -85,7 +83,7 @@ export function AdminLayout({
               return (
                 <Link
                   key={item.label}
-                  href={item.href}
+                  to={item.href}
                   onClick={() => setIsSidebarOpen(false)}
                   className={`group relative flex items-center gap-3.5 rounded-2xl px-4 py-3 text-[14px] transition-all ${
                     isActive
@@ -118,7 +116,7 @@ export function AdminLayout({
                 return (
                   <Link
                     key={item.label}
-                    href={item.href}
+                    to={item.href}
                     onClick={() => setIsSidebarOpen(false)}
                     className={`group flex items-center gap-3.5 rounded-2xl px-4 py-3 text-[14px] transition-all ${
                       isActive
@@ -182,7 +180,7 @@ export function AdminLayout({
           <div className="flex shrink-0 items-center gap-2 sm:gap-3">
             {platformRole ? (
               <Link
-                href="/super-admin"
+                to="/super-admin"
                 className="hidden items-center gap-1.5 rounded-full bg-slate-900 px-3 py-2 text-[12px] font-bold text-white hover:bg-slate-800 sm:inline-flex"
               >
                 <Shield size={14} /> Super Admin

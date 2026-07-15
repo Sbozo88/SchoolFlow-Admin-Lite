@@ -1,23 +1,31 @@
-import { FlatCompat } from "@eslint/eslintrc";
-import { defineConfig, globalIgnores } from "eslint/config";
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import js from "@eslint/js";
+import globals from "globals";
+import reactHooks from "eslint-plugin-react-hooks";
+import reactRefresh from "eslint-plugin-react-refresh";
+import tseslint from "typescript-eslint";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = defineConfig([
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
-  globalIgnores([
-    ".next/**",
-    ".firebase/**",
-    "out/**",
-    "build/**",
-    "next-env.d.ts",
-  ]),
-]);
-
-export default eslintConfig;
+export default tseslint.config(
+  { ignores: ["dist/**", ".firebase/**", "node_modules/**"] },
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ["**/*.{ts,tsx}"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      globals: globals.browser,
+    },
+    plugins: {
+      "react-hooks": reactHooks,
+      "react-refresh": reactRefresh,
+    },
+    rules: {
+      ...reactHooks.configs.recommended.rules,
+      "react-refresh/only-export-components": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
+  {
+    files: ["*.{js,mjs,ts}", "scripts/**/*.{js,mjs,ts}"],
+    languageOptions: { globals: globals.node },
+  },
+);

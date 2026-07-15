@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "react-router-dom";
 import { useTenant } from "@/components/tenant/TenantProvider";
 import { Button } from "@/components/ui/Button";
 
@@ -17,7 +17,7 @@ export function ImpersonationBanner() {
         {!canWrite ? ", read-only" : ""})
       </p>
       <div className="flex items-center gap-2">
-        <Link className="text-xs font-bold text-amber-900 underline" href="/super-admin/clients">
+        <Link className="text-xs font-bold text-amber-900 underline" to="/super-admin/clients">
           Back to Super Admin
         </Link>
         <Button type="button" variant="secondary" className="h-8 px-3 text-xs" onClick={endImpersonation}>

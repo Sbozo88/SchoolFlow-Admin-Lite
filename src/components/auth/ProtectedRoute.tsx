@@ -1,8 +1,7 @@
 "use client";
 
 import { LockKeyhole, ShieldAlert } from "lucide-react";
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useOptionalTenant } from "@/components/tenant/TenantProvider";
@@ -39,14 +38,14 @@ export function ProtectedRoute({
   } = useAuth();
   const tenant = useOptionalTenant();
   const isImpersonating = Boolean(tenant?.isImpersonating && tenant.activeTenantId);
-  const router = useRouter();
-  const pathname = usePathname();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
 
   useEffect(() => {
     if (!loading && isConfigured && !user) {
-      router.replace(`/login?next=${encodeURIComponent(pathname ?? homePath)}`);
+      navigate(`/login?next=${encodeURIComponent(pathname || homePath)}`, { replace: true });
     }
-  }, [homePath, isConfigured, loading, pathname, router, user]);
+  }, [homePath, isConfigured, loading, navigate, pathname, user]);
 
   // Super Admin / unbound operators must never stay on the school dashboard
   useEffect(() => {
@@ -61,7 +60,7 @@ export function ProtectedRoute({
         isImpersonating,
       })
     ) {
-      router.replace("/super-admin");
+      navigate("/super-admin", { replace: true });
     }
     // School-only users (tenant bound, no platform role) cannot open Super Admin
     if (
@@ -72,14 +71,14 @@ export function ProtectedRoute({
         tenantRole,
       })
     ) {
-      router.replace("/admin");
+      navigate("/admin", { replace: true });
     }
   }, [
     isImpersonating,
     loading,
     platformRole,
     role,
-    router,
+    navigate,
     tenantId,
     tenantRole,
     user,
@@ -222,7 +221,7 @@ function AccessShell({
           {action ?? (
             <Link
               className="inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-bold text-white"
-              href="/login"
+              to="/login"
             >
               Go to login
             </Link>
