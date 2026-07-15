@@ -1,0 +1,517 @@
+import { buildTenantProvision, type ProvisionResult } from "@/lib/provision/provisionTenant";
+import { stampTenantCreate, hasRequiredTenantMeta, type TimestampProvider } from "@/lib/tenant/stamp";
+import { filterByTenant, belongsToTenant } from "@/lib/tenant/filter";
+import type { TenantWriteContext } from "@/lib/tenant/types";
+
+/** Shared demo password for school client admins (Firebase Auth email/password). */
+export const DEMO_SCHOOL_PASSWORD = "DemoSchool123!";
+
+/** Fixed demo school definitions — two additional isolated tenants. */
+export const DEMO_SCHOOL_DEFINITIONS = [
+  {
+    key: "greenfield",
+    organizationName: "Greenfield Music Academy",
+    adminEmail: "admin@greenfield-music.demo",
+    adminDisplayName: "Greenfield Admin",
+    adminPassword: DEMO_SCHOOL_PASSWORD,
+    planId: "plan-growth",
+    notes: "Demo school A — multi-tenant bootstrap",
+    tenantIdHint: "tenant-demo-greenfield",
+  },
+  {
+    key: "riverside",
+    organizationName: "Riverside Arts School",
+    adminEmail: "admin@riverside-arts.demo",
+    adminDisplayName: "Riverside Admin",
+    adminPassword: DEMO_SCHOOL_PASSWORD,
+    planId: "plan-starter",
+    notes: "Demo school B — multi-tenant bootstrap",
+    tenantIdHint: "tenant-demo-riverside",
+  },
+] as const;
+
+export type DemoSchoolKey = (typeof DEMO_SCHOOL_DEFINITIONS)[number]["key"];
+
+export type DemoLoginCredential = {
+  label: string;
+  workspace: "platform" | "client";
+  email: string;
+  /** Password for school demos; Super Admin uses the currently signed-in Firebase account. */
+  password: string | null;
+  note: string;
+  tenantId?: string;
+};
+
+/**
+ * Demo login card content.
+ * Super Admin: always the operator's current Firebase Auth user (no separate demo password).
+ * Schools: fixed email/password for client workspace login.
+ */
+export function getDemoLoginCredentials(opts?: {
+  superAdminEmail?: string | null;
+  schoolTenantIds?: Partial<Record<DemoSchoolKey, string>>;
+}): DemoLoginCredential[] {
+  const superEmail = opts?.superAdminEmail?.trim() || "(your current Firebase login email)";
+  const schools: DemoLoginCredential[] = DEMO_SCHOOL_DEFINITIONS.map((s) => ({
+    label: s.organizationName,
+    workspace: "client" as const,
+    email: s.adminEmail,
+    password: s.adminPassword,
+    note: "Client workspace /admin after login",
+    tenantId: opts?.schoolTenantIds?.[s.key] ?? s.tenantIdHint,
+  }));
+  return [
+    {
+      label: "Super Admin (platform)",
+      workspace: "platform",
+      email: superEmail,
+      password: null,
+      note: "Uses your current Firebase Auth credentials — no separate demo password",
+    },
+    ...schools,
+  ];
+}
+
+export type SuperAdminBootstrapProfile = {
+  id: string;
+  email: string;
+  displayName: string;
+  platformRole: "super_admin";
+  role: null;
+  tenantId: null;
+  status: "active";
+  organizationName: string;
+  /** Platform users must not be bound to a school tenant. */
+  isPlatformOnly: true;
+  /** True when id/email come from the signed-in Firebase user. */
+  linkedToCurrentAuth: boolean;
+};
+
+export type DemoLearnerDoc = Record<string, unknown> & { id: string; tenantId: string };
+export type DemoAttendanceDoc = Record<string, unknown> & { id: string; tenantId: string };
+export type DemoPaymentDoc = Record<string, unknown> & { id: string; tenantId: string };
+export type DemoSubmissionDoc = Record<string, unknown> & { id: string; tenantId: string };
+export type DemoActivityDoc = Record<string, unknown> & { id: string; tenantId: string };
+
+export type SchoolDemoDataPack = {
+  tenantId: string;
+  schoolName: string;
+  learners: DemoLearnerDoc[];
+  attendance: DemoAttendanceDoc[];
+  payments: DemoPaymentDoc[];
+  parentSubmissions: DemoSubmissionDoc[];
+  recentActivity: DemoActivityDoc[];
+};
+
+export type DemoPlatformBootstrap = {
+  superAdmin: SuperAdminBootstrapProfile;
+  schools: Array<{
+    definition: (typeof DEMO_SCHOOL_DEFINITIONS)[number];
+    provision: ProvisionResult;
+    demo: SchoolDemoDataPack;
+  }>;
+};
+
+const isoTimestamps = (iso: string): TimestampProvider => ({
+  now: () => iso,
+});
+
+/**
+ * Super Admin identity — platform-only, no school tenantId.
+ * Prefer the signed-in Firebase user (uid + email); fallback demo id for pure previews.
+ */
+export function buildSuperAdminBootstrapProfile(opts?: {
+  profileId?: string;
+  email?: string;
+  displayName?: string;
+  linkedToCurrentAuth?: boolean;
+}): SuperAdminBootstrapProfile {
+  const linked = Boolean(opts?.linkedToCurrentAuth || (opts?.profileId && opts?.email));
+  return {
+    id: opts?.profileId ?? "user-super-admin-demo",
+    email: opts?.email ?? "superadmin@schoolflow.demo",
+    displayName: opts?.displayName ?? "SchoolFlow Super Admin",
+    platformRole: "super_admin",
+    role: null,
+    tenantId: null,
+    status: "active",
+    organizationName: "SchoolFlow Platform",
+    isPlatformOnly: true,
+    linkedToCurrentAuth: linked,
+  };
+}
+
+export function isPlatformOnlySuperAdmin(profile: {
+  platformRole?: string | null;
+  tenantId?: string | null;
+  role?: string | null;
+}): boolean {
+  return (
+    profile.platformRole === "super_admin" &&
+    (profile.tenantId === null || profile.tenantId === undefined || profile.tenantId === "") &&
+    (profile.role === null || profile.role === undefined || profile.role === "")
+  );
+}
+
+/** Learner + related demo rows for one school, stamped via real stampTenantCreate. */
+export function buildSchoolDemoData(
+  tenantId: string,
+  schoolName: string,
+  actorUserId: string,
+  timestamps: TimestampProvider,
+  opts?: { schoolKey?: string },
+): SchoolDemoDataPack {
+  const ctx: TenantWriteContext = { tenantId, userId: actorUserId };
+  const key = opts?.schoolKey ?? tenantId.slice(-8);
+  const prefix = `${key}`;
+
+  const learnerSpecs = [
+    {
+      id: `${prefix}-learner-1`,
+      firstName: key === "riverside" ? "Mia" : "Zara",
+      lastName: key === "riverside" ? "Patel" : "Dlamini",
+      className: "Grade 4",
+      programme: schoolName,
+      instrumentOrActivity: key === "riverside" ? "Drama" : "Piano",
+      parentName: key === "riverside" ? "Anita Patel" : "Thandi Dlamini",
+      parentPhone: key === "riverside" ? "0821002001" : "0845550103",
+      parentEmail: key === "riverside" ? "anita@riverside.demo" : "thandi@greenfield.demo",
+      paymentStatus: "paid" as const,
+      learnerStatus: "active" as const,
+    },
+    {
+      id: `${prefix}-learner-2`,
+      firstName: key === "riverside" ? "Leo" : "Liam",
+      lastName: key === "riverside" ? "Botha" : "Smith",
+      className: "Grade 5",
+      programme: schoolName,
+      instrumentOrActivity: key === "riverside" ? "Art" : "Guitar",
+      parentName: key === "riverside" ? "Karin Botha" : "Sarah Smith",
+      parentPhone: key === "riverside" ? "0821002002" : "0835550102",
+      parentEmail: key === "riverside" ? "karin@riverside.demo" : "sarah@greenfield.demo",
+      paymentStatus: "partial" as const,
+      learnerStatus: "active" as const,
+    },
+    {
+      id: `${prefix}-learner-3`,
+      firstName: key === "riverside" ? "Sienna" : "Amahle",
+      lastName: key === "riverside" ? "Naidoo" : "Nkosi",
+      className: "Grade 3",
+      programme: schoolName,
+      instrumentOrActivity: key === "riverside" ? "Dance" : "Drums",
+      parentName: key === "riverside" ? "Priya Naidoo" : "Bongani Nkosi",
+      parentPhone: key === "riverside" ? "0821002003" : "0825550101",
+      parentEmail: key === "riverside" ? "priya@riverside.demo" : "bongani@greenfield.demo",
+      paymentStatus: "unpaid" as const,
+      learnerStatus: "active" as const,
+    },
+  ];
+
+  const learners: DemoLearnerDoc[] = learnerSpecs.map((spec) => {
+    const { id, ...rest } = spec;
+    const stamped = stampTenantCreate({ ...rest, notes: `Demo learner at ${schoolName}` }, ctx, timestamps);
+    return stripUndefinedDeep({ id, ...stamped }) as DemoLearnerDoc;
+  });
+
+  const attendance: DemoAttendanceDoc[] = learners.map((learner, i) => {
+    const stamped = stampTenantCreate(
+      {
+        learnerId: learner.id,
+        learnerName: `${learner.firstName} ${learner.lastName}`,
+        date: "2026-07-14",
+        status: i === 2 ? "absent" : i === 1 ? "late" : "present",
+        className: learner.className,
+        programme: schoolName,
+      },
+      ctx,
+      timestamps,
+    );
+    return stripUndefinedDeep({ id: `${prefix}-att-${i + 1}`, ...stamped }) as DemoAttendanceDoc;
+  });
+
+  const payments: DemoPaymentDoc[] = learners.map((learner, i) => {
+    const expected = 750;
+    const paid = i === 0 ? 750 : i === 1 ? 400 : 0;
+    // Firestore rejects `undefined` field values — omit paymentDate when unpaid/partial
+    const paymentFields: Record<string, unknown> = {
+      learnerId: learner.id,
+      learnerName: `${learner.firstName} ${learner.lastName}`,
+      month: "2026-07",
+      expectedAmount: expected,
+      paidAmount: paid,
+      balance: expected - paid,
+      status: i === 0 ? "paid" : i === 1 ? "partial" : "unpaid",
+    };
+    if (i === 0) {
+      paymentFields.paymentDate = "2026-07-05";
+    }
+    const stamped = stampTenantCreate(paymentFields, ctx, timestamps);
+    return stripUndefinedDeep({ id: `${prefix}-pay-${i + 1}`, ...stamped }) as DemoPaymentDoc;
+  });
+
+  const parentSubmissions: DemoSubmissionDoc[] = [
+    stripUndefinedDeep({
+      id: `${prefix}-sub-1`,
+      ...stampTenantCreate(
+        {
+          learnerFirstName: key === "riverside" ? "Noah" : "Chloe",
+          learnerLastName: key === "riverside" ? "Williams" : "Naidoo",
+          className: "Grade 2",
+          programme: schoolName,
+          instrumentOrActivity: key === "riverside" ? "Choir" : "Violin",
+          parentName: key === "riverside" ? "Sam Williams" : "Priya Naidoo",
+          parentPhone: "0800111222",
+          parentEmail: "newparent@demo.school",
+          status: "new",
+          message: `Interested in enrolling at ${schoolName}`,
+        },
+        ctx,
+        timestamps,
+      ),
+    }) as DemoSubmissionDoc,
+  ];
+
+  const recentActivity: DemoActivityDoc[] = [
+    stripUndefinedDeep({
+      id: `${prefix}-act-1`,
+      ...stampTenantCreate(
+        {
+          type: "learner",
+          title: "Demo data loaded",
+          description: `Seeded demo workspace for ${schoolName}`,
+          timestamp: timestamps.now(),
+          link: "/admin/learners",
+        },
+        ctx,
+        timestamps,
+      ),
+    }) as DemoActivityDoc,
+  ];
+
+  return {
+    tenantId,
+    schoolName,
+    learners,
+    attendance,
+    payments,
+    parentSubmissions,
+    recentActivity,
+  };
+}
+
+/**
+ * Full pure bootstrap: Super Admin (platform-only) + two school provision packs + demo data.
+ * Uses real buildTenantProvision + stampTenantCreate.
+ */
+export function buildDemoPlatformBootstrap(opts?: {
+  actorUserId?: string;
+  timestamps?: TimestampProvider;
+  nowIso?: string;
+  /** Override id generators per school index (tests inject fixed ids). */
+  generateIds?: [() => string, () => string];
+  superAdminProfileId?: string;
+  /** Current Firebase Auth user — Super Admin uses these credentials. */
+  superAdminEmail?: string;
+  superAdminDisplayName?: string;
+  linkedToCurrentAuth?: boolean;
+  /** Real Auth uids for school admins (from secondary Auth create). */
+  schoolAdminUids?: Partial<Record<DemoSchoolKey, string>>;
+}): DemoPlatformBootstrap {
+  const actorUserId = opts?.actorUserId ?? "user-super-admin-demo";
+  const nowIso = opts?.nowIso ?? "2026-07-15T12:00:00.000Z";
+  const timestamps = opts?.timestamps ?? isoTimestamps(nowIso);
+
+  const superAdmin = buildSuperAdminBootstrapProfile({
+    profileId: opts?.superAdminProfileId ?? actorUserId,
+    email: opts?.superAdminEmail,
+    displayName: opts?.superAdminDisplayName,
+    linkedToCurrentAuth: opts?.linkedToCurrentAuth,
+  });
+
+  if (!isPlatformOnlySuperAdmin(superAdmin)) {
+    throw new Error("Super Admin bootstrap profile must be platform-only");
+  }
+
+  const schools = DEMO_SCHOOL_DEFINITIONS.map((definition, index) => {
+    const generateId =
+      opts?.generateIds?.[index] ??
+      (() => definition.tenantIdHint);
+
+    const schoolAdminUid = opts?.schoolAdminUids?.[definition.key];
+
+    const provision = buildTenantProvision(
+      {
+        organizationName: definition.organizationName,
+        adminEmail: definition.adminEmail,
+        adminDisplayName: definition.adminDisplayName,
+        planId: definition.planId,
+        notes: definition.notes,
+        trialDays: 30,
+        adminUid: schoolAdminUid,
+      },
+      actorUserId,
+      timestamps,
+      { generateId },
+    );
+
+    const demo = buildSchoolDemoData(
+      provision.tenantId,
+      definition.organizationName,
+      actorUserId,
+      timestamps,
+      { schoolKey: definition.key },
+    );
+
+    return { definition, provision, demo };
+  });
+
+  return { superAdmin, schools };
+}
+
+/**
+ * True for values that must not be Object.entries-rebuilt (FieldValue, Date, Timestamp, class instances).
+ * Plain `{}` maps are walked; Firestore sentinels keep identity / isEqual.
+ */
+export function isOpaqueFirestoreValue(value: unknown): boolean {
+  if (value === null || typeof value !== "object") return false;
+  if (Array.isArray(value)) return false;
+  if (value instanceof Date) return true;
+  // FieldValue / Timestamp / GeoPoint expose isEqual
+  if (typeof (value as { isEqual?: unknown }).isEqual === "function") return true;
+  const proto = Object.getPrototypeOf(value);
+  // Only walk plain objects (prototype Object or null)
+  if (proto !== Object.prototype && proto !== null) return true;
+  return false;
+}
+
+/**
+ * Recursively find paths with `undefined` leaves — Firestore WriteBatch.set rejects these.
+ * Returns empty array when the document is safe to write.
+ * Does not walk into FieldValue/Date/class instances.
+ */
+export function findUndefinedPaths(value: unknown, path = ""): string[] {
+  if (value === undefined) {
+    return [path || "(root)"];
+  }
+  if (value === null || typeof value !== "object") {
+    return [];
+  }
+  if (Array.isArray(value)) {
+    return value.flatMap((item, i) => findUndefinedPaths(item, `${path}[${i}]`));
+  }
+  if (isOpaqueFirestoreValue(value)) {
+    return [];
+  }
+  const out: string[] = [];
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    const next = path ? `${path}.${key}` : key;
+    out.push(...findUndefinedPaths(child, next));
+  }
+  return out;
+}
+
+/**
+ * Drop keys whose value is undefined (shallow + nested plain objects/arrays).
+ * Preserves Firestore FieldValue sentinels, Date, and other non-plain objects by reference.
+ */
+export function stripUndefinedDeep<T>(value: T): T {
+  if (value === undefined || value === null || typeof value !== "object") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => stripUndefinedDeep(item)) as T;
+  }
+  if (isOpaqueFirestoreValue(value)) {
+    return value;
+  }
+  const result: Record<string, unknown> = {};
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (child === undefined) continue;
+    result[key] = stripUndefinedDeep(child);
+  }
+  return result as T;
+}
+
+/** Every provision + demo document must be Firestore-write-safe (no undefined leaves). */
+export function assertFirestoreWriteSafe(bootstrap: DemoPlatformBootstrap): void {
+  const docs: Array<{ label: string; doc: unknown }> = [
+    { label: "superAdmin", doc: bootstrap.superAdmin },
+  ];
+  for (const school of bootstrap.schools) {
+    const tid = school.provision.tenantId;
+    docs.push(
+      { label: `${tid}.tenant`, doc: school.provision.tenant },
+      { label: `${tid}.settings`, doc: school.provision.settings },
+      { label: `${tid}.subscription`, doc: school.provision.subscription },
+      { label: `${tid}.invitation`, doc: school.provision.invitation },
+      { label: `${tid}.adminProfile`, doc: school.provision.adminProfile },
+    );
+    for (const role of school.provision.roles) {
+      docs.push({ label: `${tid}.role.${String(role.id)}`, doc: role });
+    }
+    for (const learner of school.demo.learners) {
+      docs.push({ label: `${tid}.learner.${learner.id}`, doc: learner });
+    }
+    for (const row of school.demo.attendance) {
+      docs.push({ label: `${tid}.attendance.${row.id}`, doc: row });
+    }
+    for (const row of school.demo.payments) {
+      docs.push({ label: `${tid}.payment.${row.id}`, doc: row });
+    }
+    for (const row of school.demo.parentSubmissions) {
+      docs.push({ label: `${tid}.submission.${row.id}`, doc: row });
+    }
+    for (const row of school.demo.recentActivity) {
+      docs.push({ label: `${tid}.activity.${row.id}`, doc: row });
+    }
+  }
+
+  const bad: string[] = [];
+  for (const { label, doc } of docs) {
+    for (const p of findUndefinedPaths(doc)) {
+      bad.push(`${label}: ${p}`);
+    }
+  }
+  if (bad.length > 0) {
+    throw new Error(`Firestore-unsafe undefined fields:\n${bad.join("\n")}`);
+  }
+}
+
+/** Invariants used by unit tests and seed guards. */
+export function assertDemoPlatformIsolation(bootstrap: DemoPlatformBootstrap): void {
+  const [a, b] = bootstrap.schools;
+  if (!a || !b) throw new Error("Expected exactly two schools");
+  if (a.provision.tenantId === b.provision.tenantId) {
+    throw new Error("Schools must have distinct tenantIds");
+  }
+  if (!isPlatformOnlySuperAdmin(bootstrap.superAdmin)) {
+    throw new Error("Super Admin must not be a school tenant admin");
+  }
+
+  for (const school of bootstrap.schools) {
+    const tid = school.provision.tenantId;
+    if (school.demo.tenantId !== tid) throw new Error("Demo pack tenantId mismatch");
+    for (const learner of school.demo.learners) {
+      if (!hasRequiredTenantMeta(learner)) throw new Error(`Learner ${learner.id} missing tenant meta`);
+      if (!belongsToTenant(learner, tid)) throw new Error(`Learner ${learner.id} wrong tenant`);
+    }
+    for (const row of [
+      ...school.demo.attendance,
+      ...school.demo.payments,
+      ...school.demo.parentSubmissions,
+      ...school.demo.recentActivity,
+    ]) {
+      if (!hasRequiredTenantMeta(row)) throw new Error(`Record ${row.id} missing tenant meta`);
+      if (!belongsToTenant(row, tid)) throw new Error(`Record ${row.id} wrong tenant`);
+    }
+  }
+
+  // Cross-school isolation: school A data filtered by B is empty
+  const aLearners = bootstrap.schools[0].demo.learners;
+  const bId = bootstrap.schools[1].provision.tenantId;
+  if (filterByTenant(aLearners, bId).length !== 0) {
+    throw new Error("Cross-tenant filter leak");
+  }
+
+  assertFirestoreWriteSafe(bootstrap);
+}

@@ -421,3 +421,199 @@ describe("audit + billing + lifecycle", () => {
     assert.equal(inv.tenantId, "t1");
   });
 });
+
+describe("demo platform bootstrap (Super Admin + two schools)", () => {
+  it("builds platform-only Super Admin and two distinct school tenants with stamped demo data", async () => {
+    const {
+      buildDemoPlatformBootstrap,
+      assertDemoPlatformIsolation,
+      assertFirestoreWriteSafe,
+      findUndefinedPaths,
+      isPlatformOnlySuperAdmin,
+      DEMO_SCHOOL_DEFINITIONS,
+      buildSchoolDemoData,
+    } = await import("@/lib/provision/bootstrapDemoPlatform");
+
+    const bootstrap = buildDemoPlatformBootstrap({
+      actorUserId: "user-super-admin-demo",
+      nowIso: "2026-07-15T12:00:00.000Z",
+    });
+
+    assert.equal(bootstrap.schools.length, 2);
+    assert.equal(DEMO_SCHOOL_DEFINITIONS.length, 2);
+    assert.equal(bootstrap.schools[0].definition.organizationName, "Greenfield Music Academy");
+    assert.equal(bootstrap.schools[1].definition.organizationName, "Riverside Arts School");
+
+    assert.equal(isPlatformOnlySuperAdmin(bootstrap.superAdmin), true);
+    assert.equal(bootstrap.superAdmin.platformRole, "super_admin");
+    assert.equal(bootstrap.superAdmin.tenantId, null);
+    assert.equal(bootstrap.superAdmin.role, null);
+
+    const idA = bootstrap.schools[0].provision.tenantId;
+    const idB = bootstrap.schools[1].provision.tenantId;
+    assert.notEqual(idA, idB);
+    assert.equal(idA, "tenant-demo-greenfield");
+    assert.equal(idB, "tenant-demo-riverside");
+
+    assertDemoPlatformIsolation(bootstrap);
+
+    for (const school of bootstrap.schools) {
+      assert.ok(school.demo.learners.length >= 3);
+      for (const learner of school.demo.learners) {
+        assert.equal(hasRequiredTenantMeta(learner), true);
+        assert.equal(learner.tenantId, school.provision.tenantId);
+        assert.equal(learner.createdBy, "user-super-admin-demo");
+      }
+      // Related records stamped
+      assert.ok(school.demo.attendance.every((r) => r.tenantId === school.provision.tenantId));
+      assert.ok(school.demo.payments.every((r) => r.tenantId === school.provision.tenantId));
+    }
+
+    // Cross-school isolation via real filter
+    const aLearners = bootstrap.schools[0].demo.learners;
+    assert.equal(filterByTenant(aLearners, idB).length, 0);
+    assert.equal(filterByTenant(aLearners, idA).length, aLearners.length);
+
+    // Direct builder also stamps via stampTenantCreate
+    const extra = buildSchoolDemoData(idA, "Greenfield Music Academy", "user-super-admin-demo", {
+      now: () => "2026-07-15T12:00:00.000Z",
+    }, { schoolKey: "greenfield" });
+    assert.ok(extra.learners.every((l) => l.tenantId === idA && hasRequiredTenantMeta(l)));
+
+    // Write-path safety: every provision+demo doc destined for Firestore has no undefined leaves
+    assertFirestoreWriteSafe(bootstrap);
+    for (const school of bootstrap.schools) {
+      for (const payment of school.demo.payments) {
+        assert.equal("paymentDate" in payment && payment.paymentDate === undefined, false);
+        assert.equal(findUndefinedPaths(payment).length, 0);
+      }
+    }
+  });
+
+  it("findUndefinedPaths detects nested undefined (write-path guard)", async () => {
+    const { findUndefinedPaths, stripUndefinedDeep, assertFirestoreWriteSafe, buildDemoPlatformBootstrap } =
+      await import("@/lib/provision/bootstrapDemoPlatform");
+    assert.deepEqual(findUndefinedPaths({ a: 1, b: undefined }), ["b"]);
+    assert.deepEqual(findUndefinedPaths({ a: { c: undefined } }), ["a.c"]);
+    const cleaned = stripUndefinedDeep({ a: 1, b: undefined, c: { d: undefined, e: 2 } });
+    assert.deepEqual(cleaned, { a: 1, c: { e: 2 } });
+    assert.equal(findUndefinedPaths(cleaned).length, 0);
+
+    // Guard rejects packs that still contain undefined
+    const bad = buildDemoPlatformBootstrap({
+      actorUserId: "user-super-admin-demo",
+      nowIso: "2026-07-15T12:00:00.000Z",
+    });
+    (bad.schools[0].demo.payments[1] as Record<string, unknown>).paymentDate = undefined;
+    assert.throws(() => assertFirestoreWriteSafe(bad), /Firestore-unsafe undefined/);
+  });
+
+  it("stripUndefinedDeep preserves FieldValue sentinels and Date by identity", async () => {
+    const { stripUndefinedDeep, findUndefinedPaths, isOpaqueFirestoreValue } = await import(
+      "@/lib/provision/bootstrapDemoPlatform"
+    );
+    const { serverTimestamp } = await import("firebase/firestore");
+
+    const sentinel = serverTimestamp();
+    const when = new Date("2026-07-15T12:00:00.000Z");
+    // FieldValue-like stand-in with isEqual (mirrors Firestore contract)
+    const fakeFieldValue = {
+      _methodName: "serverTimestamp",
+      isEqual(other: unknown) {
+        return other === this;
+      },
+    };
+
+    assert.equal(isOpaqueFirestoreValue(sentinel), true);
+    assert.equal(isOpaqueFirestoreValue(when), true);
+    assert.equal(isOpaqueFirestoreValue(fakeFieldValue), true);
+    assert.equal(isOpaqueFirestoreValue({ plain: true }), false);
+
+    const cleaned = stripUndefinedDeep({
+      createdAt: sentinel,
+      updatedAt: fakeFieldValue,
+      occurredAt: when,
+      dropMe: undefined,
+      nested: { ts: sentinel, skip: undefined, keep: 1 },
+    });
+
+    // Same references — not rebuilt as plain {_methodName: ...}
+    assert.equal(cleaned.createdAt, sentinel);
+    assert.equal(cleaned.updatedAt, fakeFieldValue);
+    assert.equal(cleaned.occurredAt, when);
+    assert.equal(cleaned.nested.ts, sentinel);
+    assert.equal(typeof (cleaned.createdAt as { isEqual?: unknown }).isEqual, "function");
+    assert.equal((cleaned.updatedAt as { isEqual: (o: unknown) => boolean }).isEqual(fakeFieldValue), true);
+    assert.equal("dropMe" in cleaned, false);
+    assert.equal("skip" in cleaned.nested, false);
+    assert.equal(cleaned.nested.keep, 1);
+    assert.equal(findUndefinedPaths(cleaned).length, 0);
+
+    // Corrupted plain rebuild would lose isEqual — prove we did not do that
+    const corrupted = { _methodName: "serverTimestamp" };
+    assert.equal(isOpaqueFirestoreValue(corrupted), false);
+    assert.notEqual(cleaned.createdAt, corrupted);
+  });
+
+  it("workspace routes Super Admin to platform home", () => {
+    assert.equal(resolveWorkspace("super_admin", null, null), "platform");
+    assert.equal(homePathForWorkspace("platform"), "/super-admin");
+  });
+
+  it("demo login credentials: Super Admin uses current auth; schools have fixed passwords", async () => {
+    const {
+      getDemoLoginCredentials,
+      DEMO_SCHOOL_PASSWORD,
+      DEMO_SCHOOL_DEFINITIONS,
+      buildDemoPlatformBootstrap,
+      isPlatformOnlySuperAdmin,
+    } = await import("@/lib/provision/bootstrapDemoPlatform");
+
+    const creds = getDemoLoginCredentials({
+      superAdminEmail: "operator@example.com",
+      schoolTenantIds: {
+        greenfield: "tenant-demo-greenfield",
+        riverside: "tenant-demo-riverside",
+      },
+    });
+
+    assert.equal(creds.length, 3);
+    const platform = creds.find((c) => c.workspace === "platform");
+    assert.ok(platform);
+    assert.equal(platform!.email, "operator@example.com");
+    assert.equal(platform!.password, null);
+    assert.match(platform!.note, /current Firebase/i);
+
+    const schools = creds.filter((c) => c.workspace === "client");
+    assert.equal(schools.length, 2);
+    for (const school of schools) {
+      assert.equal(school.password, DEMO_SCHOOL_PASSWORD);
+      assert.ok(school.email.includes("@"));
+      assert.ok(school.tenantId);
+    }
+    assert.equal(
+      schools.map((s) => s.email).sort().join(","),
+      DEMO_SCHOOL_DEFINITIONS.map((d) => d.adminEmail).slice().sort().join(","),
+    );
+
+    // Super Admin linked to current Firebase user shape
+    const bootstrap = buildDemoPlatformBootstrap({
+      actorUserId: "firebase-uid-abc",
+      superAdminProfileId: "firebase-uid-abc",
+      superAdminEmail: "operator@example.com",
+      superAdminDisplayName: "Operator",
+      linkedToCurrentAuth: true,
+      schoolAdminUids: {
+        greenfield: "uid-greenfield",
+        riverside: "uid-riverside",
+      },
+      nowIso: "2026-07-15T12:00:00.000Z",
+    });
+    assert.equal(isPlatformOnlySuperAdmin(bootstrap.superAdmin), true);
+    assert.equal(bootstrap.superAdmin.id, "firebase-uid-abc");
+    assert.equal(bootstrap.superAdmin.email, "operator@example.com");
+    assert.equal(bootstrap.superAdmin.linkedToCurrentAuth, true);
+    assert.equal(bootstrap.schools[0].provision.adminProfile.id, "uid-greenfield");
+    assert.equal(bootstrap.schools[1].provision.adminProfile.id, "uid-riverside");
+  });
+});

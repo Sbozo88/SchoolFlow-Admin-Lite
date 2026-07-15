@@ -16,7 +16,8 @@ import {
   CheckSquare,
   LifeBuoy,
   PhoneForwarded,
-  LayoutDashboard
+  LayoutDashboard,
+  Shield,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,7 +48,7 @@ export function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { profile, user } = useAuth();
+  const { profile, user, platformRole } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Determine active item based on pathname
@@ -196,6 +197,14 @@ export function AdminLayout({
           </div>
           
           <div className="flex items-center gap-3 sm:gap-5">
+            {platformRole ? (
+              <Link
+                href="/super-admin"
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-2 text-[12px] font-bold text-white hover:bg-slate-800"
+              >
+                <Shield size={14} /> Super Admin
+              </Link>
+            ) : null}
             <div className="flex items-center gap-3">
               <div className="relative cursor-pointer text-slate-500 hover:text-[#6c5ce7] transition-colors p-2 rounded-xl hover:bg-[#eee9ff]">
                 <Bell size={20} />

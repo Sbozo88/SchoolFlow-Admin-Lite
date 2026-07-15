@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
+import { DEMO_SCHOOL_DEFINITIONS, DEMO_SCHOOL_PASSWORD } from "@/lib/provision/bootstrapDemoPlatform";
 import Image from "next/image";
 
 function safeNextPath(value: string | null, fallback: string) {
@@ -119,6 +120,20 @@ export function LoginForm() {
           <p className="mb-4 rounded-xl bg-amber-50 px-3 py-2 text-sm font-medium leading-6 text-amber-800">
             Firebase credentials are not configured.
           </p>
+        ) : null}
+
+        {isConfigured ? (
+          <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-[11px] leading-5 text-slate-600">
+            <p className="font-bold text-slate-800">Demo logins (after “Load demo platform”)</p>
+            <p className="mt-1">
+              <span className="font-semibold">Super Admin:</span> your Firebase account (promoted on load)
+            </p>
+            {DEMO_SCHOOL_DEFINITIONS.map((s) => (
+              <p key={s.key} className="font-mono">
+                {s.adminEmail} / {DEMO_SCHOOL_PASSWORD}
+              </p>
+            ))}
+          </div>
         ) : null}
 
         {authError ? <p className="mb-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{authError}</p> : null}
