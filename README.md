@@ -43,9 +43,19 @@ npm run build
 npm test
 ```
 
-## Deploy
+## Auto commit + deploy
 
-**Automatic:** every push to `main` runs GitHub Actions (`.github/workflows/firebase-deploy.yml`) which builds the static export and deploys Hosting + Firestore rules/indexes to project `schoolflow-admin-lite`.
+Commit and push to GitHub in one step (skips `.env*`):
+
+```bash
+npm run sync
+# with a message:
+npm run sync -- "feat: your change summary"
+```
+
+**Automatic deploy:** every push to `main` runs GitHub Actions (`.github/workflows/firebase-deploy.yml`) which builds the static export and deploys Hosting + Firestore rules/indexes to project `schoolflow-admin-lite`.
+
+Flow: `npm run sync` → GitHub → Firebase Hosting.
 
 Required GitHub repo secrets:
 

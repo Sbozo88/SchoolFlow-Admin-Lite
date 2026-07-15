@@ -9,7 +9,10 @@
     "lint": "eslint",
     "test": "tsx --tsconfig tsconfig.json --test src/lib/saas.test.ts",
     "deploy": "npm run build && firebase deploy --project schoolflow-admin-lite --non-interactive",
-    "deploy:hosting": "npm run build && firebase deploy --only hosting --project schoolflow-admin-lite --non-interactive"
+    "deploy:hosting": "npm run build && firebase deploy --only hosting --project schoolflow-admin-lite --non-interactive",
+    "sync": "bash scripts/auto-commit-push.sh",
+    "auto:commit": "bash scripts/auto-commit-push.sh",
+    "auto:push": "bash scripts/auto-commit-push.sh"
   },
   "dependencies": {
     "firebase": "^12.13.0",
