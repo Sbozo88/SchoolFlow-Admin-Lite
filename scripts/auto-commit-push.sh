@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Auto-stage, commit, and push to GitHub (main).
-# Safe: skips empty commits, never prints secrets, refuses detached HEAD.
+# Auto-stage, commit, and push to GitHub.
+# Target repo: github.com/Sbozo88/SchoolFlow-Admin-Lite  (gh repo clone Sbozo88/SchoolFlow-Admin-Lite)
+# Safe: skips empty commits, never prints secrets, refuses detached HEAD / wrong remote.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -8,6 +9,7 @@ cd "$ROOT"
 
 BRANCH="${AUTO_GIT_BRANCH:-main}"
 REMOTE="${AUTO_GIT_REMOTE:-origin}"
+EXPECTED_REMOTE_HINT="${AUTO_GIT_REMOTE_HINT:-SchoolFlow-Admin-Lite}"
 MSG="${1:-}"
 
 # Never commit local env / credentials
@@ -24,6 +26,20 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   echo "Not a git repository."
   exit 1
 fi
+
+remote_url="$(git remote get-url "$REMOTE" 2>/dev/null || true)"
+if [[ -z "$remote_url" ]]; then
+  echo "Remote '$REMOTE' not configured."
+  exit 1
+fi
+if [[ "$remote_url" != *"$EXPECTED_REMOTE_HINT"* ]]; then
+  echo "Refusing auto-commit: remote is not $EXPECTED_REMOTE_HINT"
+  echo "  $REMOTE → $remote_url"
+  exit 1
+fi
+
+echo "Repo: $remote_url"
+echo "Path: $ROOT"
 
 current="$(git rev-parse --abbrev-ref HEAD)"
 if [[ "$current" == "HEAD" ]]; then
@@ -78,4 +94,5 @@ fi
 git commit -m "$MSG"
 git push -u "$REMOTE" "$BRANCH"
 echo "Committed and pushed to ${REMOTE}/${BRANCH}"
+echo "GitHub: https://github.com/Sbozo88/SchoolFlow-Admin-Lite"
 echo "Auto-deploy (GitHub Actions → Firebase) will run on main."
