@@ -1,6 +1,12 @@
 import { initializeApp, getApps, type FirebaseApp, type FirebaseOptions } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { 
+  getFirestore, 
+  initializeFirestore, 
+  persistentLocalCache, 
+  persistentMultipleTabManager,
+  type Firestore 
+} from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
@@ -39,8 +45,23 @@ export function getFirebaseAuth() {
   return getAuth(getFirebaseApp());
 }
 
-export function getFirebaseDb() {
-  return getFirestore(getFirebaseApp());
+let dbInstance: Firestore | null = null;
+
+export function getFirebaseDb(): Firestore {
+  if (!dbInstance) {
+    const app = getFirebaseApp();
+    const isBrowser = typeof window !== "undefined" && typeof window.indexedDB !== "undefined";
+    if (isBrowser) {
+      dbInstance = initializeFirestore(app, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager(),
+        }),
+      });
+    } else {
+      dbInstance = getFirestore(app);
+    }
+  }
+  return dbInstance;
 }
 
 export function getFirebaseStorage() {
