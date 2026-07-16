@@ -1,15 +1,17 @@
 "use client";
 
-import { CheckSquare, Copy, AlertTriangle } from "lucide-react";
+import { CheckSquare, Copy, AlertTriangle, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { useSetupSprintTasks } from "@/hooks/useSetupSprintTasks";
 import { useMissingInfoItems } from "@/hooks/useMissingInfoItems";
+import { useTenant } from "@/components/tenant/TenantProvider";
 
 export function SetupSprintPage() {
   const { records: tasks, updateSetupSprintTaskStatus } = useSetupSprintTasks();
   const { records: missingInfo, updateMissingInfoStatus } = useMissingInfoItems();
+  const { canWrite } = useTenant();
 
   const totalTasks = tasks.length || 1; // avoid div/0
   const completedTasks = tasks.filter(t => t.status === "done").length;
@@ -45,6 +47,13 @@ Thank you for completing the SchoolFlow Admin Lite Setup Sprint!
         title="Setup Sprint"
         description="7-day done-for-you admin cleanup service. Track progress and missing information."
       />
+
+      {!canWrite && (
+        <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <AlertCircle size={18} className="text-amber-600 shrink-0" />
+          <span>Viewing workspace in read-only mode. Changes cannot be saved.</span>
+        </div>
+      )}
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <div className="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
@@ -88,6 +97,7 @@ Thank you for completing the SchoolFlow Admin Lite Setup Sprint!
                 <Button 
                   variant={task.status === "done" ? "secondary" : "primary"}
                   onClick={() => updateSetupSprintTaskStatus(task.id, task.status === "done" ? "not_started" : "done")}
+                  disabled={!canWrite}
                 >
                   {task.status === "done" ? "Undo" : "Mark Done"}
                 </Button>
@@ -119,6 +129,7 @@ Thank you for completing the SchoolFlow Admin Lite Setup Sprint!
                 <Button 
                   variant={info.status === "resolved" ? "secondary" : "primary"}
                   onClick={() => updateMissingInfoStatus(info.id, info.status === "resolved" ? "open" : "resolved")}
+                  disabled={!canWrite}
                 >
                   {info.status === "resolved" ? "Reopen" : "Resolve"}
                 </Button>

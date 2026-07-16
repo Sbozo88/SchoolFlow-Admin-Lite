@@ -41,16 +41,17 @@ export function buildAuditLogEntry(input: {
   if (!input.userId?.trim()) throw new Error("userId is required for audit log");
   if (!input.action) throw new Error("action is required for audit log");
   const now = input.now?.() ?? new Date();
-  return {
+  const entry: AuditLogEntry = {
     timestamp: now.toISOString(),
     tenantId: input.tenantId ?? null,
     userId: input.userId,
     action: input.action,
-    detail: input.detail,
     device: input.device ?? null,
-    ip: input.ip ?? null, // future-ready
-    meta: input.meta,
+    ip: input.ip ?? null,
   };
+  if (input.detail !== undefined) entry.detail = input.detail;
+  if (input.meta !== undefined) entry.meta = input.meta;
+  return entry;
 }
 
 export function isValidAuditEntry(entry: Partial<AuditLogEntry>): boolean {

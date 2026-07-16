@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 
 export default function SuperAdminSupportPage() {
-  const { user } = useAuth();
+  const { user, platformRole } = useAuth();
   const { tenants } = usePlatformTenants();
   const { startImpersonation } = useTenant();
   const [email, setEmail] = useState("");
@@ -39,7 +39,7 @@ export default function SuperAdminSupportPage() {
       <div>
         <h1 className="text-2xl font-black text-slate-900 dark:text-white">Support center</h1>
         <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Assist clients, open read-only workspace views, and trigger password resets (client-side Firebase limits apply).
+          Assist clients, open workspace views, and trigger password resets.
         </p>
       </div>
 
@@ -53,22 +53,37 @@ export default function SuperAdminSupportPage() {
       </Card>
 
       <Card className="p-5">
-        <h2 className="text-sm font-bold dark:text-white">Quick impersonation (audited, temporary)</h2>
-        <ul className="mt-3 space-y-2">
+        <h2 className="text-sm font-bold dark:text-white mb-3">Quick impersonation (audited, temporary)</h2>
+        <ul className="space-y-2">
           {tenants.map((t) => (
-            <li key={t.id} className="flex items-center justify-between gap-2 text-sm">
+            <li key={t.id} className="flex items-center justify-between gap-4 text-sm py-2 border-b border-slate-100 dark:border-slate-800 last:border-0">
               <span className="font-semibold dark:text-white">{t.name}</span>
-              <Button
-                type="button"
-                variant="secondary"
-                className="h-8 text-xs"
-                onClick={() => {
-                  startImpersonation(t.id, "read");
-                  window.location.href = `/school?tenantId=${encodeURIComponent(t.id)}`;
-                }}
-              >
-                Open workspace
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-8 text-xs"
+                  onClick={() => {
+                    startImpersonation(t.id, "read");
+                    window.location.href = `/school?tenantId=${encodeURIComponent(t.id)}`;
+                  }}
+                >
+                  Open (Read-Only)
+                </Button>
+                {platformRole === "super_admin" && (
+                  <Button
+                    type="button"
+                    variant="primary"
+                    className="h-8 text-xs bg-[#6c5ce7] hover:bg-[#5a4bcf]"
+                    onClick={() => {
+                      startImpersonation(t.id, "support");
+                      window.location.href = `/school?tenantId=${encodeURIComponent(t.id)}`;
+                    }}
+                  >
+                    Open (Support/Write)
+                  </Button>
+                )}
+              </div>
             </li>
           ))}
           {tenants.length === 0 && <li className="text-slate-500 dark:text-slate-400">No clients to support.</li>}

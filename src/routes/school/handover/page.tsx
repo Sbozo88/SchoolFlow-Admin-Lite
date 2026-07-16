@@ -6,10 +6,12 @@ import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { useHandoverTasks } from "@/hooks/useHandoverTasks";
-import { FileText, Download, CheckCircle, Clock, CheckCircle2, ChevronRight, FolderLock, Check } from "lucide-react";
+import { FileText, Download, CheckCircle, Clock, CheckCircle2, ChevronRight, FolderLock, Check, AlertCircle } from "lucide-react";
+import { useTenant } from "@/components/tenant/TenantProvider";
 
 export default function HandoverPage() {
   const { records: handovers, toggleHandoverTask } = useHandoverTasks();
+  const { canWrite } = useTenant();
   const [selectedTerm, setSelectedTerm] = useState("Term 2");
 
   const terms = ["Term 1", "Term 2", "Term 3", "Term 4"];
@@ -25,10 +27,17 @@ export default function HandoverPage() {
           title="Handover & Transitions"
           description="Manage end-of-term checklists and generate compliance reports."
         />
-        <Button variant="primary" className="bg-[#6c5ce7] hover:bg-[#5a4bcf]">
+        <Button variant="primary" className="bg-[#6c5ce7] hover:bg-[#5a4bcf]" disabled={!canWrite}>
           <FolderLock className="mr-2" size={18} /> Close Academic Term
         </Button>
       </div>
+
+      {!canWrite && (
+        <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <AlertCircle size={18} className="text-amber-600 shrink-0" />
+          <span>Viewing workspace in read-only mode. Changes cannot be saved.</span>
+        </div>
+      )}
 
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
         {terms.map(term => (
@@ -68,12 +77,15 @@ export default function HandoverPage() {
                 currentTasks.map(task => (
                   <div 
                     key={task.id} 
-                    className={`p-5 flex items-start gap-4 transition-colors hover:bg-slate-50 cursor-pointer ${task.status === "Done" ? "opacity-75" : ""}`}
-                    onClick={() => toggleHandoverTask(task.id)}
+                    className={`p-5 flex items-start gap-4 transition-colors hover:bg-slate-50 ${canWrite ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
+                    onClick={() => canWrite && toggleHandoverTask(task.id)}
                   >
-                    <button className={`mt-0.5 flex-shrink-0 size-6 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      task.status === "Done" ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 text-transparent"
-                    }`}>
+                    <button 
+                      disabled={!canWrite}
+                      className={`mt-0.5 flex-shrink-0 size-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                        task.status === "Done" ? "bg-emerald-500 border-emerald-500 text-white" : "border-slate-300 text-transparent"
+                      } ${!canWrite ? "opacity-50" : ""}`}
+                    >
                       <Check size={14} strokeWidth={3} />
                     </button>
                     

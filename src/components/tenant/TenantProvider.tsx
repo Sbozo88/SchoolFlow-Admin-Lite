@@ -8,6 +8,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
   IMPERSONATION_STORAGE_KEY,
@@ -73,6 +74,7 @@ function browserStorage(): Storage | null {
 
 export function TenantProvider({ children }: { children: ReactNode }) {
   const { user, profile } = useAuth();
+  const { pathname } = useLocation();
 
   const rawJson = useSyncExternalStore(
     subscribeImpersonationStorage,
@@ -91,7 +93,11 @@ export function TenantProvider({ children }: { children: ReactNode }) {
   const homeTenantId = profile?.tenantId ?? null;
   const isImpersonating = Boolean(impersonation && isImpersonationActive(impersonation));
   const activeTenantId = isImpersonating ? impersonation!.tenantId : homeTenantId;
-  const canWrite = isImpersonating ? canWriteWhileImpersonating(impersonation) : true;
+  const canWrite = pathname.startsWith("/demo")
+    ? false
+    : isImpersonating
+    ? canWriteWhileImpersonating(impersonation)
+    : true;
 
   const startImpersonation = useCallback(
     (tenantId: string, mode: ImpersonationMode = "read") => {
