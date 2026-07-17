@@ -1,10 +1,10 @@
 import { expect, test } from "@playwright/test";
 
 test("renders the login experience", async ({ page }) => {
-  await page.goto("/login");
+  await page.goto("/");
   await expect(page).toHaveTitle("SchoolFlow Admin Lite");
-  await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /Continue with Google/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Clean school admin in 7 days." })).toBeVisible();
+  await expect(page.getByRole("button", { name: /Super Admin \(Google\)/i })).toBeVisible();
   await expect(page.getByRole("button", { name: /^Apple$/i })).toHaveCount(0);
 });
 
@@ -19,8 +19,8 @@ test("serves public tenant forms on direct routes", async ({ page }) => {
 
 test("protects nested school and super-admin workspace routes", async ({ page }) => {
   await page.goto("/super-admin/clients");
-  await expect(page).toHaveURL(/\/login\?next=%2Fsuper-admin%2Fclients$/);
+  await expect(page).toHaveURL(/\/\?next=%2Fsuper-admin%2Fclients$/);
 
   await page.goto("/school/learners");
-  await expect(page).toHaveURL(/\/login\?next=%2Fschool%2Flearners$/);
+  await expect(page).toHaveURL(/\/\?next=%2Fschool%2Flearners$/);
 });
