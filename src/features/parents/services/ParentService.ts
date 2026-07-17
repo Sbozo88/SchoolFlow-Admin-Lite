@@ -1,7 +1,13 @@
 import { ParentSubmissionRepository } from "../repositories/ParentSubmissionRepository";
 import { FollowUpRepository } from "../repositories/FollowUpRepository";
-import { ParentSubmissionRecord, ParentSubmissionFormValues, FollowUpRecord, FollowUpFormValues } from "../types";
+import {
+  ParentSubmissionRecord,
+  ParentSubmissionFormValues,
+  FollowUpRecord,
+  FollowUpFormValues,
+} from "../types";
 import { AuditService } from "@/services/AuditService";
+import { DEFAULT_COLLECTION_LIMIT } from "@/lib/data/queryLimits";
 
 export class ParentService {
   private submissionRepo: ParentSubmissionRepository;
@@ -9,7 +15,6 @@ export class ParentService {
   private tenantId: string;
   private userId?: string;
 
-  // userId can be optional for public parent form submissions
   constructor(tenantId: string, userId?: string) {
     this.tenantId = tenantId;
     this.userId = userId;
@@ -18,7 +23,11 @@ export class ParentService {
   }
 
   async getAllSubmissions(): Promise<ParentSubmissionRecord[]> {
-    return this.submissionRepo.query();
+    return this.submissionRepo.query({
+      orderByField: "createdAt",
+      orderDirection: "desc",
+      limitCount: DEFAULT_COLLECTION_LIMIT,
+    });
   }
 
   async submitParentForm(data: ParentSubmissionFormValues): Promise<string> {
@@ -35,7 +44,10 @@ export class ParentService {
     return id;
   }
 
-  async updateSubmissionStatus(id: string, status: "new" | "reviewed" | "converted" | "archived"): Promise<void> {
+  async updateSubmissionStatus(
+    id: string,
+    status: "new" | "reviewed" | "converted" | "archived",
+  ): Promise<void> {
     if (!this.userId) throw new Error("Unauthorized");
     const oldRecord = await this.submissionRepo.getById(id);
     await this.submissionRepo.update(id, { status, updatedBy: this.userId });
@@ -43,7 +55,11 @@ export class ParentService {
   }
 
   async getAllFollowUps(): Promise<FollowUpRecord[]> {
-    return this.followUpRepo.query();
+    return this.followUpRepo.query({
+      orderByField: "createdAt",
+      orderDirection: "asc",
+      limitCount: DEFAULT_COLLECTION_LIMIT,
+    });
   }
 
   async createFollowUp(data: FollowUpFormValues): Promise<string> {
@@ -68,7 +84,7 @@ export class ParentService {
   async deleteFollowUp(id: string): Promise<void> {
     if (!this.userId) throw new Error("Unauthorized");
     const oldRecord = await this.followUpRepo.getById(id);
-    await this.followUpRepo.delete(id);
+    await this.followUpRepo.softDelete(id, this.userId);
     await AuditService.log(this.tenantId, this.userId, "DELETE", "followUp", id, oldRecord, null);
   }
 }

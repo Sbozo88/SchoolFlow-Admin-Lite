@@ -78,24 +78,30 @@ async function ensureSchoolAdmin(auth, school) {
   return { uid: account.uid, created };
 }
 
+/** Firestore batch writes are limited to 500 ops — chunk safely. */
+const BATCH_CHUNK = 400;
+
 async function upsertDocuments(db, documents, actorUid) {
-  const refs = documents.map((item) => db.doc(`${item.collection}/${item.id}`));
-  const snapshots = await db.getAll(...refs);
-  const batch = db.batch();
   const now = Timestamp.now();
-  documents.forEach((item, index) => {
-    const previous = snapshots[index].data();
-    batch.set(refs[index], {
-      ...item.data,
-      id: item.id,
-      tenantId: item.tenantId,
-      createdAt: previous?.createdAt || now,
-      createdBy: previous?.createdBy || actorUid,
-      updatedAt: now,
-      demo: true,
-    }, { merge: true });
-  });
-  await batch.commit();
+  for (let offset = 0; offset < documents.length; offset += BATCH_CHUNK) {
+    const slice = documents.slice(offset, offset + BATCH_CHUNK);
+    const refs = slice.map((item) => db.doc(`${item.collection}/${item.id}`));
+    const snapshots = await db.getAll(...refs);
+    const batch = db.batch();
+    slice.forEach((item, index) => {
+      const previous = snapshots[index].data();
+      batch.set(refs[index], {
+        ...item.data,
+        id: item.id,
+        tenantId: item.tenantId,
+        createdAt: previous?.createdAt || now,
+        createdBy: previous?.createdBy || actorUid,
+        updatedAt: now,
+        demo: true,
+      }, { merge: true });
+    });
+    await batch.commit();
+  }
 }
 
 export const bootstrapDemoPlatform = onCall({

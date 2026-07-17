@@ -1,57 +1,52 @@
-import { BaseRepository } from "../repositories/BaseRepository";
-import { BaseDocument } from "@/types/base";
+import { writeAuditLog } from "@/firebase/audit";
+import type { AuditAction } from "@/lib/audit/auditLog";
+import { reportClientError } from "@/lib/observability/reportClientError";
 
-export interface AuditLog extends BaseDocument {
-  userId: string;
-  action: "CREATE" | "UPDATE" | "DELETE" | "LOGIN" | "IMPORT" | "EXPORT";
-  entity: string;
-  entityId: string;
-  oldValue: any;
-  newValue: any;
-  ip?: string;
-  browser?: string;
+type EntityAction = "CREATE" | "UPDATE" | "DELETE" | "LOGIN" | "IMPORT" | "EXPORT";
+
+function mapEntityAction(action: EntityAction, entity: string): AuditAction {
+  if (action === "LOGIN") return "login";
+  if (action === "DELETE") return "data.delete";
+  if (action === "CREATE" && entity === "client") return "client.create";
+  if (action === "UPDATE" && entity === "client") return "client.update";
+  // Prefer generic data mutation markers for operational entities
+  if (action === "CREATE") return "client.update";
+  if (action === "UPDATE") return "client.update";
+  if (action === "IMPORT" || action === "EXPORT") return "client.update";
+  return "client.update";
 }
 
-class AuditLogRepository extends BaseRepository<AuditLog> {
-  constructor() {
-    super("auditLogs");
-  }
-}
-
+/**
+ * Unified audit writer for feature services.
+ * Delegates to writeAuditLog (single schema / collection path).
+ */
 export class AuditService {
-  private static repository = new AuditLogRepository();
-
   static async log(
     tenantId: string,
     userId: string,
-    action: AuditLog["action"],
+    action: EntityAction,
     entity: string,
     entityId: string,
-    oldValue: any = null,
-    newValue: any = null
+    oldValue: unknown = null,
+    newValue: unknown = null,
   ) {
-    const now = new Date().toISOString();
-    const logEntry: Omit<AuditLog, "id"> = {
-      tenantId,
-      userId,
-      action,
-      entity,
-      entityId,
-      oldValue,
-      newValue,
-      status: "active",
-      createdAt: now,
-      updatedAt: now,
-      createdBy: userId,
-      updatedBy: userId,
-    };
-
     try {
-      await this.repository.create(logEntry);
+      await writeAuditLog({
+        userId,
+        tenantId,
+        action: mapEntityAction(action, entity),
+        detail: `${action} ${entity} ${entityId}`.trim(),
+        meta: {
+          entity,
+          entityId,
+          entityAction: action,
+          // Avoid storing full document dumps — keep lightweight diffs flags
+          hadOldValue: oldValue != null,
+          hadNewValue: newValue != null,
+        },
+      });
     } catch (error) {
-      console.error("Failed to write audit log:", error);
-      // We generally do not want audit log failures to crash the main transaction,
-      // but in strict environments we might. For now, we log and proceed.
+      reportClientError("AuditService.log", error, { tenantId, entity, entityId, action });
     }
   }
 }

@@ -1,6 +1,8 @@
-import { QueryConstraint, where, WithFieldValue, UpdateData } from "firebase/firestore";
-import { BaseRepository } from "./BaseRepository";
+import { type QueryConstraint, where, type WithFieldValue, type UpdateData } from "firebase/firestore";
+import { BaseRepository, type QueryOptions } from "./BaseRepository";
 import { BaseDocument } from "@/types/base";
+import { DEFAULT_COLLECTION_LIMIT } from "@/lib/data/queryLimits";
+import { notDeleted } from "@/lib/data/notDeleted";
 
 export abstract class TenantRepository<T extends BaseDocument> extends BaseRepository<T> {
   protected tenantId: string;
@@ -12,21 +14,29 @@ export abstract class TenantRepository<T extends BaseDocument> extends BaseRepos
 
   override async getById(id: string): Promise<T | null> {
     const record = await super.getById(id);
-    // Enforce tenant isolation strictly even on direct lookups
     if (record && record.tenantId === this.tenantId) {
       return record;
     }
     return null;
   }
 
-  override async query(constraints: QueryConstraint[] = []): Promise<T[]> {
+  override async query(constraintsOrOptions: QueryConstraint[] | QueryOptions = []): Promise<T[]> {
+    const options: QueryOptions = Array.isArray(constraintsOrOptions)
+      ? { constraints: constraintsOrOptions }
+      : constraintsOrOptions;
+
     const tenantConstraint = where("tenantId", "==", this.tenantId);
-    return super.query([tenantConstraint, ...constraints]);
+    const rows = await super.query({
+      ...options,
+      constraints: [tenantConstraint, ...(options.constraints ?? [])],
+      limitCount: options.limitCount ?? DEFAULT_COLLECTION_LIMIT,
+    });
+    return notDeleted(rows);
   }
 
   override async create(data: Partial<Omit<T, "id" | "tenantId">> | WithFieldValue<Omit<T, "id">>): Promise<string> {
     const now = new Date().toISOString();
-    const safeData = data as any;
+    const safeData = data as Record<string, unknown>;
     const enrichedData = {
       ...safeData,
       tenantId: this.tenantId,
@@ -50,17 +60,27 @@ export abstract class TenantRepository<T extends BaseDocument> extends BaseRepos
   }
 
   override async delete(id: string): Promise<void> {
+    // Soft-delete by default for tenant-scoped operational data
+    return this.softDelete(id, "system");
+  }
+
+  async softDelete(id: string, userId: string): Promise<void> {
+    const record = await this.getById(id);
+    if (!record) {
+      throw new Error(`Record ${id} not found or does not belong to tenant ${this.tenantId}`);
+    }
+    return this.update(id, {
+      status: "deleted",
+      updatedBy: userId,
+    } as unknown as UpdateData<T>);
+  }
+
+  /** Irreversible remove — platform purge only. */
+  async hardDelete(id: string): Promise<void> {
     const record = await this.getById(id);
     if (!record) {
       throw new Error(`Record ${id} not found or does not belong to tenant ${this.tenantId}`);
     }
     return super.delete(id);
-  }
-
-  async softDelete(id: string, userId: string): Promise<void> {
-    return this.update(id, {
-      status: "deleted",
-      updatedBy: userId,
-    } as unknown as UpdateData<T>);
   }
 }

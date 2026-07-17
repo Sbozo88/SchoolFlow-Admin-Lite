@@ -1,70 +1,76 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useMemo } from "react";
 import { PaymentService } from "../services/PaymentService";
 import { PaymentRecord, PaymentFormValues } from "../types";
 import { useAuth } from "@/hooks/useAuth";
+import { useActiveTenantId } from "@/hooks/useActiveTenantId";
+import { useFirestoreCollection } from "@/hooks/useFirestoreCollection";
+import { DEFAULT_COLLECTION_LIMIT } from "@/lib/data/queryLimits";
+import { reportClientError } from "@/lib/observability/reportClientError";
 
 export function usePayments() {
-  const { profile, user } = useAuth();
-  const tenantId = profile?.tenantId;
+  const { user } = useAuth();
+  const tenantId = useActiveTenantId();
   const userId = user?.uid;
 
-  const [records, setRecords] = useState<PaymentRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    records,
+    syncState,
+    errorMessage,
+    isConfigured,
+    isLive,
+  } = useFirestoreCollection<PaymentRecord>("payments", [], {
+    tenantId,
+    orderByField: "month",
+    orderDirection: "desc",
+    limitCount: DEFAULT_COLLECTION_LIMIT,
+  });
 
   const paymentService = useMemo(() => {
     if (!tenantId || !userId) return null;
     return new PaymentService(tenantId, userId);
   }, [tenantId, userId]);
 
-  const loadPayments = async () => {
-    if (!paymentService) return;
-    setIsLoading(true);
-    try {
-      const data = await paymentService.getAllPayments();
-      setRecords(data);
-      setError(null);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load payments.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadPayments();
-  }, [paymentService]);
-
   const createPayment = async (data: PaymentFormValues) => {
     if (!paymentService) throw new Error("Service not initialized");
-    await paymentService.createPayment(data);
-    await loadPayments(); // Refetch after mutation
+    try {
+      return await paymentService.createPayment(data);
+    } catch (err) {
+      reportClientError("usePayments.createPayment", err, { tenantId });
+      throw err;
+    }
   };
 
   const updatePayment = async (id: string, data: Partial<PaymentFormValues>) => {
     if (!paymentService) throw new Error("Service not initialized");
-    await paymentService.updatePayment(id, data);
-    await loadPayments(); // Refetch after mutation
+    try {
+      await paymentService.updatePayment(id, data);
+    } catch (err) {
+      reportClientError("usePayments.updatePayment", err, { tenantId, id });
+      throw err;
+    }
   };
 
   const deletePayment = async (id: string) => {
     if (!paymentService) throw new Error("Service not initialized");
-    await paymentService.deletePayment(id);
-    await loadPayments(); // Refetch after mutation
+    try {
+      await paymentService.deletePayment(id);
+    } catch (err) {
+      reportClientError("usePayments.deletePayment", err, { tenantId, id });
+      throw err;
+    }
   };
 
   return {
     records,
-    isLoading,
-    error,
+    isLoading: Boolean(tenantId && !isLive && !errorMessage),
+    error: errorMessage || null,
     createPayment,
     updatePayment,
     deletePayment,
-    isConfigured: !!tenantId, // legacy compatibility
-    syncState: isLoading ? "Loading..." : "Synced", // legacy compatibility
-    errorMessage: error, // legacy compatibility
+    isConfigured: isConfigured && !!tenantId,
+    syncState,
+    errorMessage,
   };
 }

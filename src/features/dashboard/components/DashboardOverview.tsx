@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  ArrowDownRight,
   ArrowRight,
-  ArrowUpRight,
   Calendar,
   CheckCircle2,
   ClipboardList,
@@ -13,7 +11,9 @@ import {
   XCircle,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useMemo } from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { useActiveTenantId } from "@/hooks/useActiveTenantId";
 import { DashboardCalendar, type CalendarEvent } from "./DashboardCalendar";
 import { StatCard } from "@/components/ui/StatCard";
 import { WelcomeCard } from "@/components/ui/WelcomeCard";
@@ -39,28 +39,63 @@ const kpiIcons = {
 
 const kpiStyles: Record<
   (typeof SCHOOL_KPI_LABELS)[number],
-  { gradient: string; change: string; trend: "up" | "down" }
+  { gradient: string }
 > = {
-  "Total Learners": { gradient: "from-[#7c6cf0] to-[#4834d4]", change: "+12%", trend: "up" },
-  "Present Today": { gradient: "from-[#2ed573] to-[#10ac84]", change: "+5%", trend: "up" },
-  "Absent Today": { gradient: "from-[#ff6b81] to-[#ee5a24]", change: "-3%", trend: "down" },
-  "Payments Pending": { gradient: "from-[#feca57] to-[#f0932b]", change: "+8%", trend: "up" },
-  "Follow-Ups": { gradient: "from-[#1dd1a1] to-[#00b894]", change: "-2", trend: "down" },
-  "New Forms": { gradient: "from-[#a29bfe] to-[#6c5ce7]", change: "+1", trend: "up" },
+  "Total Learners": { gradient: "from-[#7c6cf0] to-[#4834d4]" },
+  "Present Today": { gradient: "from-[#2ed573] to-[#10ac84]" },
+  "Absent Today": { gradient: "from-[#ff6b81] to-[#ee5a24]" },
+  "Payments Pending": { gradient: "from-[#feca57] to-[#f0932b]" },
+  "Follow-Ups": { gradient: "from-[#1dd1a1] to-[#00b894]" },
+  "New Forms": { gradient: "from-[#a29bfe] to-[#6c5ce7]" },
 };
+
+function todayIsoDate() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function attendanceDayKey(dateValue: unknown): string {
+  if (typeof dateValue === "string") return dateValue.slice(0, 10);
+  if (dateValue && typeof dateValue === "object" && "toDate" in dateValue) {
+    try {
+      return (dateValue as { toDate: () => Date }).toDate().toISOString().slice(0, 10);
+    } catch {
+      return "";
+    }
+  }
+  return "";
+}
+
+/** Real, non-fake KPI change chip when we can derive it from loaded data. */
+function attendanceRateChip(present: number, absent: number): { trend: "up" | "down"; change: string } | null {
+  const total = present + absent;
+  if (total <= 0) return null;
+  const rate = Math.round((present / total) * 100);
+  return {
+    trend: rate >= 80 ? "up" : "down",
+    change: `${rate}%`,
+  };
+}
 
 export function DashboardOverview() {
   const { pathname } = useLocation();
   const { profile, user } = useAuth();
+  const activeTenantId = useActiveTenantId();
+  // Shared liveQueryHub: same tenant collections reuse one listener each
   const { records: learners } = useLearners();
   const { records: attendance } = useAttendance();
   const { records: payments } = usePayments();
   const { records: followUps } = useFollowUps();
   const { records: forms } = useParentSubmissions();
 
+  const today = todayIsoDate();
+  const todaysAttendance = useMemo(
+    () => attendance.filter((a) => attendanceDayKey(a.date) === today),
+    [attendance, today],
+  );
+
   const totalLearners = learners.length;
-  const presentToday = attendance.filter((a) => a.status === "present").length;
-  const absentToday = attendance.filter((a) => a.status === "absent").length;
+  const presentToday = todaysAttendance.filter((a) => a.status === "present").length;
+  const absentToday = todaysAttendance.filter((a) => a.status === "absent").length;
   const pendingPayments = payments.filter(
     (p) => p.status === "unpaid" || p.status === "overdue" || p.status === "partial",
   ).length;
@@ -76,12 +111,18 @@ export function DashboardOverview() {
     "New Forms": newForms,
   };
 
+  const presentChip = attendanceRateChip(presentToday, absentToday);
+
   const firstName =
     (profile?.displayName || user?.displayName || "Admin").split(/\s+/)[0] || "Admin";
 
-  const isBrightFutures = profile?.tenantId === "demo-brightfutures";
-  const today = new Date();
-  
+  const isBrightFutures =
+    activeTenantId === "tenant-demo-brightfutures" ||
+    activeTenantId === "demo-brightfutures" ||
+    profile?.tenantId === "tenant-demo-brightfutures";
+
+  const now = new Date();
+
   const addDays = (date: Date, days: number) => {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
@@ -89,43 +130,42 @@ export function DashboardOverview() {
   };
 
   const formatEventTime = (date: Date, timeStr: string) => {
-    const isToday = date.toDateString() === today.toDateString();
-    const isTomorrow = date.toDateString() === addDays(today, 1).toDateString();
-    
+    const isToday = date.toDateString() === now.toDateString();
+    const isTomorrow = date.toDateString() === addDays(now, 1).toDateString();
+
     if (isToday) return `Today, ${timeStr}`;
     if (isTomorrow) return `Tomorrow, ${timeStr}`;
-    return `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}, ${timeStr}`;
+    return `${date.toLocaleString("default", { month: "short" })} ${date.getDate()}, ${timeStr}`;
   };
-
 
   const upcomingEvents: CalendarEvent[] = isBrightFutures
     ? [
-        { id: "e1", name: "Parent Teacher Day", date: addDays(today, 2), time: "2:00 PM", color: "bg-[#ff6b81]", textColor: "text-white" },
-        { id: "e2", name: "Sports Day", date: addDays(today, 5), time: "8:00 AM", color: "bg-[#feca57]", textColor: "text-[#4834d4]" },
-        { id: "e3", name: "Term Exams", date: addDays(today, 10), time: "9:00 AM", color: "bg-[#00d2d3]", textColor: "text-[#1e293b]" },
-        { id: "e4", name: "School Assembly", date: addDays(today, 15), time: "10:00 AM", color: "bg-[#a29bfe]", textColor: "text-white" },
+        { id: "e1", name: "Parent Teacher Day", date: addDays(now, 2), time: "2:00 PM", color: "bg-[#ff6b81]", textColor: "text-white" },
+        { id: "e2", name: "Sports Day", date: addDays(now, 5), time: "8:00 AM", color: "bg-[#feca57]", textColor: "text-[#4834d4]" },
+        { id: "e3", name: "Term Exams", date: addDays(now, 10), time: "9:00 AM", color: "bg-[#00d2d3]", textColor: "text-[#1e293b]" },
+        { id: "e4", name: "School Assembly", date: addDays(now, 15), time: "10:00 AM", color: "bg-[#a29bfe]", textColor: "text-white" },
       ]
     : [
-        { id: "e5", name: "Ubuntu Staff Briefing", date: addDays(today, 1), time: "8:00 AM", color: "bg-[#6c5ce7]", textColor: "text-white" },
-        { id: "e6", name: "Science Fair", date: addDays(today, 7), time: "10:00 AM", color: "bg-[#1dd1a1]", textColor: "text-white" },
-        { id: "e7", name: "Choir Practice", date: addDays(today, 12), time: "3:00 PM", color: "bg-[#ff9f43]", textColor: "text-white" },
+        { id: "e5", name: "Ubuntu Staff Briefing", date: addDays(now, 1), time: "8:00 AM", color: "bg-[#6c5ce7]", textColor: "text-white" },
+        { id: "e6", name: "Science Fair", date: addDays(now, 7), time: "10:00 AM", color: "bg-[#1dd1a1]", textColor: "text-white" },
+        { id: "e7", name: "Choir Practice", date: addDays(now, 12), time: "3:00 PM", color: "bg-[#ff9f43]", textColor: "text-white" },
       ];
 
   return (
     <div className="flex flex-col gap-7 xl:flex-row xl:gap-8">
       <div className="min-w-0 flex-1 space-y-7">
-        {/* Welcome banner — reference purple card */}
         <WelcomeCard
           greeting="Good morning,"
           title={`Welcome back, ${firstName === "Admin" ? "Admin" : firstName}! 👋`}
           subtitle="Here's what's happening at your school today. Stay on top of your admin tasks."
         />
 
-        {/* Six KPI tiles */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-5">
           {SCHOOL_KPI_LABELS.map((label) => {
             const Icon = kpiIcons[label];
             const style = kpiStyles[label];
+            const chip =
+              label === "Present Today" || label === "Absent Today" ? presentChip : null;
             return (
               <StatCard
                 key={label}
@@ -133,14 +173,13 @@ export function DashboardOverview() {
                 value={values[label]}
                 icon={Icon}
                 gradient={style.gradient}
-                trend={style.trend}
-                change={style.change}
+                trend={chip?.trend}
+                change={chip?.change}
               />
             );
           })}
         </div>
 
-        {/* Quick Actions — white cards like reference */}
         <div>
           <div className="mb-4 flex items-end justify-between gap-3">
             <div>
@@ -183,7 +222,6 @@ export function DashboardOverview() {
         </div>
       </div>
 
-      {/* Right column: calendar + events */}
       <div className="w-full shrink-0 space-y-5 xl:w-[340px]">
         <DashboardCalendar events={upcomingEvents} />
 

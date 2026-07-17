@@ -8,13 +8,24 @@ import {
   getDocs,
   query,
   where,
-  QueryConstraint,
-  DocumentData,
-  WithFieldValue,
-  UpdateData,
+  orderBy,
+  limit,
+  type QueryConstraint,
+  type DocumentData,
+  type WithFieldValue,
+  type UpdateData,
+  type OrderByDirection,
 } from "firebase/firestore";
 import { getFirebaseDb } from "@/firebase/firebaseConfig";
 import { BaseDocument } from "@/types/base";
+import { DEFAULT_COLLECTION_LIMIT } from "@/lib/data/queryLimits";
+
+export type QueryOptions = {
+  constraints?: QueryConstraint[];
+  orderByField?: string;
+  orderDirection?: OrderByDirection;
+  limitCount?: number;
+};
 
 export abstract class BaseRepository<T extends BaseDocument> {
   protected collectionName: string;
@@ -38,10 +49,20 @@ export abstract class BaseRepository<T extends BaseDocument> {
     return { id: snapshot.id, ...snapshot.data() } as T;
   }
 
-  async query(constraints: QueryConstraint[] = []): Promise<T[]> {
+  async query(constraintsOrOptions: QueryConstraint[] | QueryOptions = []): Promise<T[]> {
+    const options: QueryOptions = Array.isArray(constraintsOrOptions)
+      ? { constraints: constraintsOrOptions }
+      : constraintsOrOptions;
+
+    const constraints: QueryConstraint[] = [...(options.constraints ?? [])];
+    if (options.orderByField) {
+      constraints.push(orderBy(options.orderByField, options.orderDirection ?? "asc"));
+    }
+    constraints.push(limit(options.limitCount ?? DEFAULT_COLLECTION_LIMIT));
+
     const q = query(this.collectionRef, ...constraints);
     const snapshot = await getDocs(q);
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() } as T));
+    return snapshot.docs.map((d) => ({ id: d.id, ...d.data() } as T));
   }
 
   async create(data: WithFieldValue<Omit<T, "id">>): Promise<string> {
@@ -54,9 +75,11 @@ export abstract class BaseRepository<T extends BaseDocument> {
     await updateDoc(docRef, data as DocumentData);
   }
 
+  /** Hard delete — prefer softDelete on TenantRepository for operational data. */
   async delete(id: string): Promise<void> {
     const docRef = doc(this.collectionRef, id);
-    // Soft delete is preferred in production SaaS, but we provide raw delete here.
     await deleteDoc(docRef);
   }
 }
+
+export { where, orderBy, limit };

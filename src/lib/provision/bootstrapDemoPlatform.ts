@@ -4,6 +4,10 @@ import { filterByTenant, belongsToTenant } from "@/lib/tenant/filter";
 import type { TenantWriteContext } from "@/lib/tenant/types";
 
 /** Shared demo password for school client admins (Firebase Auth email/password). */
+/**
+ * Shared password for *demo* school Auth users only.
+ * Never use this path for real schools; bootstrap always stamps `demo: true`.
+ */
 export const DEMO_SCHOOL_PASSWORD = "DemoSchool123!";
 
 /** Fixed demo school definitions — two additional isolated tenants. */

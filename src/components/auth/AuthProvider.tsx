@@ -1,7 +1,15 @@
 "use client";
 
 import type { User } from "firebase/auth";
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import {
   observeAuthState,
   sendAdminPasswordReset,
@@ -54,6 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(isConfigured);
   const [authError, setAuthError] = useState("");
+  /** Only true after interactive login(); session restore must not write audit "login". */
+  const interactiveLoginRef = useRef(false);
 
   useEffect(() => {
     if (!isConfigured) {
@@ -80,12 +90,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAuthError(
             "Your profile could not be loaded. Check the users/{uid} document (role, platformRole, tenantId) and Firestore rules.",
           );
-        } else {
+        } else if (interactiveLoginRef.current) {
+          interactiveLoginRef.current = false;
           void writeAuditLog({
             userId: currentUser.uid,
             action: "login",
             tenantId: nextProfile.tenantId,
-            detail: "session_restore_or_login",
+            detail: "interactive_sign_in",
           });
         }
       } catch {
@@ -125,13 +136,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!isConfigured) {
           throw new Error("Firebase is not configured.");
         }
-        await signInWithEmail(email, password);
+        interactiveLoginRef.current = true;
+        try {
+          await signInWithEmail(email, password);
+        } catch (error) {
+          interactiveLoginRef.current = false;
+          throw error;
+        }
       },
       loginWithGoogle: async () => {
         if (!isConfigured) {
           throw new Error("Firebase is not configured.");
         }
-        await signInWithGoogle();
+        interactiveLoginRef.current = true;
+        try {
+          await signInWithGoogle();
+        } catch (error) {
+          interactiveLoginRef.current = false;
+          throw error;
+        }
       },
       refreshSession: async () => {
         if (!user) return null;
@@ -142,7 +165,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return nextProfile;
       },
       logout: async () => {
-        // Always clear support impersonation so it cannot survive sign-out or transfer to the next user
         if (typeof window !== "undefined") {
           const endResult = endImpersonationOnLogout({
             storage: window.sessionStorage,
@@ -156,7 +178,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               detail: endResult.endAudit.detail,
             });
           }
-          // Notify TenantProvider (same-tab useSyncExternalStore)
           window.dispatchEvent(new Event("schoolflow-impersonation-change"));
         }
         if (user) {

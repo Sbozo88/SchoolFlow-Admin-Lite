@@ -1,6 +1,7 @@
 import { PaymentRepository } from "../repositories/PaymentRepository";
 import { PaymentRecord, PaymentFormValues } from "../types";
 import { AuditService } from "@/services/AuditService";
+import { DEFAULT_COLLECTION_LIMIT } from "@/lib/data/queryLimits";
 
 export class PaymentService {
   private repository: PaymentRepository;
@@ -14,7 +15,11 @@ export class PaymentService {
   }
 
   async getAllPayments(): Promise<PaymentRecord[]> {
-    return this.repository.query();
+    return this.repository.query({
+      orderByField: "month",
+      orderDirection: "desc",
+      limitCount: DEFAULT_COLLECTION_LIMIT,
+    });
   }
 
   async createPayment(data: PaymentFormValues): Promise<string> {
@@ -40,7 +45,7 @@ export class PaymentService {
 
   async deletePayment(id: string): Promise<void> {
     const oldRecord = await this.repository.getById(id);
-    await this.repository.delete(id);
+    await this.repository.softDelete(id, this.userId);
     await AuditService.log(this.tenantId, this.userId, "DELETE", "payment", id, oldRecord, null);
   }
 }

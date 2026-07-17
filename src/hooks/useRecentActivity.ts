@@ -17,6 +17,7 @@ import type { TenantWriteContext } from "@/lib/tenant/types";
 import { firestoreTimestamps } from "@/firebase/tenantTimestamps";
 import { useOptionalTenant } from "@/components/tenant/TenantProvider";
 import { useMemo } from "react";
+import { ACTIVITY_FEED_LIMIT } from "@/lib/data/queryLimits";
 
 const ACTIVITY_COLLECTION = "recentActivity";
 
@@ -71,6 +72,7 @@ export function useRecentActivity() {
     orderByField: "timestamp",
     orderDirection: "desc",
     tenantId,
+    limitCount: ACTIVITY_FEED_LIMIT,
   });
 
   return useMemo(

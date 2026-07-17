@@ -1,70 +1,91 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useMemo, useState } from "react";
 import { ParentService } from "../services/ParentService";
 import { ParentSubmissionRecord, ParentSubmissionFormValues } from "../types";
 import { useAuth } from "@/hooks/useAuth";
-import { usePlatformTenants } from "@/hooks/usePlatformTenants"; // legacy
+import { useActiveTenantId } from "@/hooks/useActiveTenantId";
+import { useFirestoreCollection } from "@/hooks/useFirestoreCollection";
+import { DEFAULT_COLLECTION_LIMIT } from "@/lib/data/queryLimits";
+import { reportClientError } from "@/lib/observability/reportClientError";
+import { validatePublicIntake } from "@/lib/forms/publicIntake";
 
 export function useParentSubmissions() {
-  const { profile, user } = useAuth();
-  // If public route, we might not have a profile, we might get tenantId from URL
+  const { user } = useAuth();
   const [publicTenantId, setPublicTenantId] = useState<string | null>(null);
-  
-  const tenantId = profile?.tenantId || publicTenantId;
+  const tenantId = useActiveTenantId(publicTenantId);
   const userId = user?.uid;
 
-  const [records, setRecords] = useState<ParentSubmissionRecord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    records,
+    syncState,
+    errorMessage,
+    isConfigured,
+    isLive,
+  } = useFirestoreCollection<ParentSubmissionRecord>("parentSubmissions", [], {
+    // Only attach live listener when signed in (admin views)
+    tenantId: userId ? tenantId : null,
+    orderByField: "createdAt",
+    orderDirection: "desc",
+    limitCount: DEFAULT_COLLECTION_LIMIT,
+  });
 
   const parentService = useMemo(() => {
     if (!tenantId) return null;
     return new ParentService(tenantId, userId);
   }, [tenantId, userId]);
 
-  const loadSubmissions = async () => {
-    if (!parentService || !userId) return; // Only load if logged in
-    setIsLoading(true);
+  const createSubmission = async (
+    data: ParentSubmissionFormValues,
+    specificTenantId?: string,
+    honeypot?: string,
+  ) => {
+    const tId = specificTenantId || tenantId;
+    if (!tId) throw new Error("No tenant context");
+
+    // Public intake hardening (rate limit, tenant format, honeypot)
+    if (!userId) {
+      const gate = validatePublicIntake({ tenantId: tId, honeypot });
+      if (!gate.ok) {
+        if (gate.reason === "honeypot") {
+          // Silent fake success for bots
+          return "ok";
+        }
+        throw new Error(gate.reason);
+      }
+    }
+
+    const service = new ParentService(tId, userId);
     try {
-      const data = await parentService.getAllSubmissions();
-      setRecords(data);
-      setError(null);
+      return await service.submitParentForm(data);
     } catch (err) {
-      console.error(err);
-      setError("Failed to load submissions.");
-    } finally {
-      setIsLoading(false);
+      reportClientError("useParentSubmissions.createSubmission", err, { tenantId: tId });
+      throw err;
     }
   };
 
-  useEffect(() => {
-    if (userId) loadSubmissions();
-  }, [parentService, userId]);
-
-  const createSubmission = async (data: ParentSubmissionFormValues, specificTenantId?: string) => {
-    const tId = specificTenantId || tenantId;
-    if (!tId) throw new Error("No tenant context");
-    const service = new ParentService(tId, userId);
-    await service.submitParentForm(data);
-    if (userId) await loadSubmissions(); 
-  };
-
-  const updateSubmissionStatus = async (id: string, status: "new" | "reviewed" | "converted" | "archived") => {
+  const updateSubmissionStatus = async (
+    id: string,
+    status: "new" | "reviewed" | "converted" | "archived",
+  ) => {
     if (!parentService) throw new Error("Service not initialized");
-    await parentService.updateSubmissionStatus(id, status);
-    await loadSubmissions();
+    try {
+      await parentService.updateSubmissionStatus(id, status);
+    } catch (err) {
+      reportClientError("useParentSubmissions.updateSubmissionStatus", err, { tenantId, id });
+      throw err;
+    }
   };
 
   return {
-    records,
-    isLoading,
-    error,
+    records: userId ? records : [],
+    isLoading: Boolean(userId && tenantId && !isLive && !errorMessage),
+    error: errorMessage || null,
     createSubmission,
     updateSubmissionStatus,
     setPublicTenantId,
-    isConfigured: !!tenantId, 
-    syncState: isLoading ? "Loading..." : "Synced", 
-    errorMessage: error, 
+    isConfigured: isConfigured && !!tenantId,
+    syncState: userId ? syncState : "Public form mode",
+    errorMessage: userId ? errorMessage : "",
   };
 }

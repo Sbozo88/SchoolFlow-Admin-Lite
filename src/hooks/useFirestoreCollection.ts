@@ -1,16 +1,11 @@
 "use client";
 
-import {
-  collection,
-  onSnapshot,
-  orderBy,
-  query,
-  where,
-  type OrderByDirection,
-} from "firebase/firestore";
 import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
-import { getFirebaseDb, isFirebaseConfigured } from "@/firebase/firebaseConfig";
-import { tenantQueryConstraint } from "@/lib/tenant/filter";
+import type { OrderByDirection } from "firebase/firestore";
+import { isFirebaseConfigured } from "@/firebase/firebaseConfig";
+import { subscribeLiveQuery } from "@/lib/data/liveQueryHub";
+import { DEFAULT_COLLECTION_LIMIT } from "@/lib/data/queryLimits";
+import { notDeleted } from "@/lib/data/notDeleted";
 
 type FirestoreCollectionOptions = {
   orderByField?: string;
@@ -19,6 +14,10 @@ type FirestoreCollectionOptions = {
   tenantId?: string | null;
   /** Skip tenant filter (platform-wide collections only). */
   skipTenantFilter?: boolean;
+  /** Max docs to listen to (default DEFAULT_COLLECTION_LIMIT). */
+  limitCount?: number;
+  /** Hide soft-deleted rows (default true). */
+  excludeDeleted?: boolean;
 };
 
 type FirestoreCollectionState<T> = {
@@ -30,7 +29,7 @@ type FirestoreCollectionState<T> = {
   isLive: boolean;
 };
 
-export function useFirestoreCollection<T extends { id: string }>(
+export function useFirestoreCollection<T extends { id: string; status?: string }>(
   collectionName: string,
   fallbackRecords: T[],
   options: FirestoreCollectionOptions = {},
@@ -39,6 +38,8 @@ export function useFirestoreCollection<T extends { id: string }>(
   const tenantId = options.tenantId;
   const skipTenantFilter = options.skipTenantFilter === true;
   const waitingForTenant = !skipTenantFilter && !tenantId;
+  const excludeDeleted = options.excludeDeleted !== false;
+  const limitCount = options.limitCount ?? DEFAULT_COLLECTION_LIMIT;
 
   const [records, setRecords] = useState<T[]>(() => (isConfigured ? [] : fallbackRecords));
   const [syncState, setSyncState] = useState(() => {
@@ -55,42 +56,37 @@ export function useFirestoreCollection<T extends { id: string }>(
     }
 
     if (waitingForTenant) {
+      setRecords([]);
+      setIsLive(false);
+      setSyncState("Waiting for tenant context");
       return undefined;
     }
 
-    const db = getFirebaseDb();
-    const constraints = [];
-
-    if (!skipTenantFilter && tenantId) {
-      const tq = tenantQueryConstraint(tenantId);
-      constraints.push(where(tq.field, tq.op, tq.value));
-    }
-
-    if (options.orderByField) {
-      constraints.push(orderBy(options.orderByField, options.orderDirection ?? "asc"));
-    }
-
-    const collectionQuery = query(collection(db, collectionName), ...constraints);
-
-    return onSnapshot(
-      collectionQuery,
-      (snapshot) => {
-        setRecords(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as T));
+    return subscribeLiveQuery<T>(
+      collectionName,
+      tenantId ?? null,
+      {
+        orderByField: options.orderByField,
+        orderDirection: options.orderDirection,
+        limitCount,
+        skipTenantFilter,
+      },
+      (rows) => {
+        setRecords(rows);
         setSyncState("Firestore connected");
         setErrorMessage("");
         setIsLive(true);
       },
-      () => {
+      (message) => {
         setSyncState("Firestore unavailable");
-        setErrorMessage(
-          "Live data could not be loaded. Check Firebase access, Firestore rules, tenant membership, and indexes.",
-        );
+        setErrorMessage(message);
         setIsLive(false);
       },
     );
   }, [
     collectionName,
     isConfigured,
+    limitCount,
     options.orderByField,
     options.orderDirection,
     skipTenantFilter,
@@ -98,8 +94,8 @@ export function useFirestoreCollection<T extends { id: string }>(
     waitingForTenant,
   ]);
 
-  // Derive empty state when waiting for tenant without setState-in-effect
-  const effectiveRecords = waitingForTenant ? [] : records;
+  const visible = excludeDeleted ? notDeleted(records) : records;
+  const effectiveRecords = waitingForTenant ? [] : visible;
   const effectiveSync = waitingForTenant ? "Waiting for tenant context" : syncState;
   const effectiveLive = waitingForTenant ? false : isLive;
 

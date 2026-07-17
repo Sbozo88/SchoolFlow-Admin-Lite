@@ -774,3 +774,70 @@ describe("demo platform bootstrap (Super Admin + two schools)", () => {
     assert.equal(bootstrap.schools[1].provision.adminProfile.id, "uid-ubuntu");
   });
 });
+
+describe("performance helpers (audit follow-ups)", () => {
+  it("notDeleted filters soft-deleted rows only", async () => {
+    const { notDeleted } = await import("@/lib/data/notDeleted");
+    const rows = [
+      { id: "1", status: "active" },
+      { id: "2", status: "deleted" },
+      { id: "3" },
+      { id: "4", status: "new" },
+    ];
+    assert.deepEqual(
+      notDeleted(rows).map((r) => r.id),
+      ["1", "3", "4"],
+    );
+  });
+
+  it("public intake validates tenant ids, honeypot, and rate limit", async () => {
+    const {
+      isPlausibleTenantId,
+      isHoneypotTripped,
+      validatePublicIntake,
+    } = await import("@/lib/forms/publicIntake");
+
+    assert.equal(isPlausibleTenantId("tenant-demo-ubuntu"), true);
+    assert.equal(isPlausibleTenantId(""), false);
+    assert.equal(isPlausibleTenantId("ab"), false);
+    assert.equal(isPlausibleTenantId("bad id!"), false);
+    assert.equal(isHoneypotTripped("http://spam"), true);
+    assert.equal(isHoneypotTripped(""), false);
+
+    const honeypot = validatePublicIntake({ tenantId: "tenant-ok", honeypot: "x" });
+    assert.equal(honeypot.ok, false);
+    if (!honeypot.ok) assert.equal(honeypot.reason, "honeypot");
+
+    // Rate limit: allow MAX_SUBMITS then deny (uses sessionStorage when present)
+    if (typeof globalThis.sessionStorage === "undefined") {
+      // Node test env — inject a minimal sessionStorage
+      const store = new Map<string, string>();
+      // @ts-expect-error test shim
+      globalThis.sessionStorage = {
+        getItem: (k: string) => store.get(k) ?? null,
+        setItem: (k: string, v: string) => {
+          store.set(k, v);
+        },
+        removeItem: (k: string) => {
+          store.delete(k);
+        },
+      };
+    }
+    sessionStorage.removeItem("schoolflow-public-intake-rate");
+    for (let i = 0; i < 5; i++) {
+      const ok = validatePublicIntake({ tenantId: "tenant-rate-test" });
+      assert.equal(ok.ok, true, `submit ${i + 1} should pass`);
+    }
+    const blocked = validatePublicIntake({ tenantId: "tenant-rate-test" });
+    assert.equal(blocked.ok, false);
+  });
+
+  it("ships default collection limits for bounded reads", async () => {
+    const { DEFAULT_COLLECTION_LIMIT, DASHBOARD_COLLECTION_LIMIT, ACTIVITY_FEED_LIMIT } =
+      await import("@/lib/data/queryLimits");
+    assert.ok(DEFAULT_COLLECTION_LIMIT > 0 && DEFAULT_COLLECTION_LIMIT <= 1000);
+    assert.ok(DASHBOARD_COLLECTION_LIMIT <= DEFAULT_COLLECTION_LIMIT);
+    assert.ok(ACTIVITY_FEED_LIMIT <= DEFAULT_COLLECTION_LIMIT);
+  });
+});
+

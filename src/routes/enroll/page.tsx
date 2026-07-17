@@ -28,6 +28,8 @@ export default function EnrollPage() {
     emergencyContact: "",
     message: "",
   });
+  /** Honeypot — leave empty; bots that fill it get a silent success. */
+  const [companyWebsite, setCompanyWebsite] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,11 +46,11 @@ export default function EnrollPage() {
     setError("");
 
     try {
-      await createSubmission(formValues, tenantId.trim());
+      await createSubmission(formValues, tenantId.trim(), companyWebsite);
       setSuccess(true);
     } catch (err: unknown) {
       console.error(err);
-      setError("Failed to submit the form. Please try again later.");
+      setError(err instanceof Error ? err.message : "Failed to submit the form. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }
@@ -78,6 +80,18 @@ export default function EnrollPage() {
         <div className="p-6 sm:p-8">
           {error && <p className="bg-rose-50 text-rose-700 p-3 rounded-lg mb-6 font-medium text-sm">{error}</p>}
           <form onSubmit={handleSubmit} className="grid gap-6">
+            {/* Honeypot field — hidden from real users */}
+            <div aria-hidden="true" className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden">
+              <label>
+                Company website
+                <input
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={companyWebsite}
+                  onChange={(e) => setCompanyWebsite(e.target.value)}
+                />
+              </label>
+            </div>
             <fieldset className="grid gap-4">
               <legend className="text-sm font-bold text-slate-900 mb-2 border-b border-slate-200 w-full pb-1">
                 Learner Details

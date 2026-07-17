@@ -1,6 +1,7 @@
 import { AttendanceRepository } from "../repositories/AttendanceRepository";
 import { AttendanceRecord, AttendanceFormValues } from "../types";
 import { AuditService } from "@/services/AuditService";
+import { DEFAULT_COLLECTION_LIMIT } from "@/lib/data/queryLimits";
 
 export class AttendanceService {
   private repository: AttendanceRepository;
@@ -14,7 +15,11 @@ export class AttendanceService {
   }
 
   async getAllAttendance(): Promise<AttendanceRecord[]> {
-    return this.repository.query();
+    return this.repository.query({
+      orderByField: "date",
+      orderDirection: "desc",
+      limitCount: DEFAULT_COLLECTION_LIMIT,
+    });
   }
 
   async createAttendance(data: AttendanceFormValues): Promise<string> {
@@ -40,7 +45,7 @@ export class AttendanceService {
 
   async deleteAttendance(id: string): Promise<void> {
     const oldRecord = await this.repository.getById(id);
-    await this.repository.delete(id);
+    await this.repository.softDelete(id, this.userId);
     await AuditService.log(this.tenantId, this.userId, "DELETE", "attendance", id, oldRecord, null);
   }
 }

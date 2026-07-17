@@ -1,5 +1,6 @@
 import { Component, type ReactNode } from "react";
 import { CircleAlert, RefreshCw } from "lucide-react";
+import { reportClientError } from "@/lib/observability/reportClientError";
 
 type Props = {
   children: ReactNode;
@@ -21,7 +22,9 @@ export class GlobalErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Uncaught error:", error, errorInfo);
+    reportClientError("GlobalErrorBoundary", error, {
+      componentStack: errorInfo.componentStack?.slice(0, 500),
+    });
   }
 
   render() {

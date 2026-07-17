@@ -1,6 +1,7 @@
 import { LearnerRepository } from "../repositories/LearnerRepository";
 import { Learner, LearnerFormValues } from "../types";
 import { AuditService } from "@/services/AuditService";
+import { DEFAULT_COLLECTION_LIMIT } from "@/lib/data/queryLimits";
 
 export class LearnerService {
   private repository: LearnerRepository;
@@ -14,7 +15,11 @@ export class LearnerService {
   }
 
   async getAllLearners(): Promise<Learner[]> {
-    return this.repository.query();
+    return this.repository.query({
+      orderByField: "lastName",
+      orderDirection: "asc",
+      limitCount: DEFAULT_COLLECTION_LIMIT,
+    });
   }
 
   async createLearner(data: LearnerFormValues): Promise<string> {
@@ -40,7 +45,7 @@ export class LearnerService {
 
   async deleteLearner(id: string): Promise<void> {
     const oldRecord = await this.repository.getById(id);
-    await this.repository.delete(id);
+    await this.repository.softDelete(id, this.userId);
     await AuditService.log(this.tenantId, this.userId, "DELETE", "learner", id, oldRecord, null);
   }
 }

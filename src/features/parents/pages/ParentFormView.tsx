@@ -28,6 +28,7 @@ export function ParentFormView() {
     emergencyContact: "",
     message: "",
   });
+  const [companyWebsite, setCompanyWebsite] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,13 +39,15 @@ export function ParentFormView() {
       if (!tenantId.trim()) {
         throw new Error("Missing tenantId");
       }
-      await createSubmission(formValues, tenantId.trim());
+      await createSubmission(formValues, tenantId.trim(), companyWebsite);
       setIsSuccess(true);
-    } catch {
+    } catch (err) {
       setErrorMsg(
-        tenantId
-          ? "Failed to submit the form. Please check your connection and try again."
-          : "This form requires a tenant link (?tenantId=...). Contact your school for the correct enrollment URL.",
+        !tenantId
+          ? "This form requires a tenant link (?tenantId=...). Contact your school for the correct enrollment URL."
+          : err instanceof Error
+            ? err.message
+            : "Failed to submit the form. Please check your connection and try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -89,6 +92,17 @@ export function ParentFormView() {
           )}
 
           <form onSubmit={handleSubmit} className="grid gap-6">
+            <div aria-hidden="true" className="absolute -left-[9999px] top-auto h-0 w-0 overflow-hidden">
+              <label>
+                Company website
+                <input
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={companyWebsite}
+                  onChange={(e) => setCompanyWebsite(e.target.value)}
+                />
+              </label>
+            </div>
             <div className="space-y-4">
               <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-2">
                 Learner Details
