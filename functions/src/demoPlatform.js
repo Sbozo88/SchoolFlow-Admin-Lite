@@ -48,7 +48,6 @@ export function evaluateBootstrapAccess({ ownerUid, callerUid, isSuperAdmin, cal
   return { allowed: true, reason: ownerUid ? "authorized-repair" : "first-owner" };
 }
 
-const ATTENDANCE_DATES = ["2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14"];
 const ROLE_DEFINITIONS = [
   ["client_admin", "School Admin", ["*"]],
   ["manager", "Manager", ["tenant.*"]],

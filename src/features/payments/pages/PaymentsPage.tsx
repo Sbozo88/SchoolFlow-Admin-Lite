@@ -8,7 +8,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Table, type TableColumn } from "@/components/ui/Table";
 import { usePayments } from "@/features/payments/hooks/usePayments";
-import type { PaymentFormValues, PaymentRecord, PaymentStatus } from "@/features/payments/types";
+import type { PaymentRecord, PaymentStatus } from "@/features/payments/types";
 import { useLearners } from "@/features/learners/hooks/useLearners";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";

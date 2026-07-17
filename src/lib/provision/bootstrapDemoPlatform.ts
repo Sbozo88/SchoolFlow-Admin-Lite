@@ -192,7 +192,7 @@ export function buildSchoolDemoData(
     
     // Payments logic
     let paymentStatus: "paid" | "partial" | "unpaid" = "paid";
-    let expected = 750;
+    const expected = 750;
     let paid = 750;
     if (i < targetPendingPayments) {
       paymentStatus = i % 2 === 0 ? "unpaid" : "partial";

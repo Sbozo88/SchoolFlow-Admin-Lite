@@ -33,8 +33,11 @@ export function usePlatformTenants() {
     // Do not attempt to query if the user does not have a platform role yet.
     // This prevents permission denied errors for brand new accounts before they bootstrap.
     if (!platformRole) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTenants([]);
+       
       setSyncState("Waiting for setup");
+       
       setErrorMessage("");
       return undefined;
     }

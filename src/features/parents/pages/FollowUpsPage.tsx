@@ -10,7 +10,6 @@ import { Modal } from "@/components/ui/Modal";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Select } from "@/components/ui/Select";
 import { useFollowUps } from "@/features/parents/hooks/useFollowUps";
-import type { FollowUpFormValues, FollowUpRecord } from "@/features/parents/types";
 import { WhatsAppTemplates, buildWhatsAppUrl } from "@/utils/whatsapp";
 
 export function FollowUpsPage() {

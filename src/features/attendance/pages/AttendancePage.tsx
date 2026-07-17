@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { useAttendance } from "@/features/attendance/hooks/useAttendance";
-import type { AttendanceFormValues, AttendanceRecord, AttendanceStatus } from "@/features/attendance/types";
+import type { AttendanceStatus } from "@/features/attendance/types";
 import { useLearners } from "@/features/learners/hooks/useLearners";
 import { Card } from "@/components/ui/Card";
 

@@ -56,8 +56,11 @@ export function useFirestoreCollection<T extends { id: string; status?: string }
     }
 
     if (waitingForTenant) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRecords([]);
+       
       setIsLive(false);
+       
       setSyncState("Waiting for tenant context");
       return undefined;
     }

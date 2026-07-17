@@ -3,7 +3,7 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { ArrowRight, CheckCircle2, LayoutDashboard, Settings } from "lucide-react";
 
 export default function Home() {
-  const { user, isConfigured, homePath, workspace } = useAuth();
+  const { user, isConfigured, homePath } = useAuth();
 
   // We no longer auto-redirect authenticated users away from the landing page.
   // But if the app is entirely unconfigured (no firebase), we should still send to login
