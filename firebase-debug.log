@@ -29,3 +29,37 @@
     at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
 [error] 
 [error] Error: Failed to get Firebase project schoolflow-admin-lite. Please make sure the project exists and your account has permission to access it.
+[debug] [2026-07-17T12:00:43.992Z] ----------------------------------------------------------------------
+[debug] [2026-07-17T12:00:43.994Z] Command:       /opt/homebrew/Cellar/node/26.0.0/bin/node /Users/mphele4488/.npm-global/bin/firebase deploy --only hosting
+[debug] [2026-07-17T12:00:43.994Z] CLI Version:   15.18.0
+[debug] [2026-07-17T12:00:43.994Z] Platform:      darwin
+[debug] [2026-07-17T12:00:43.994Z] Node Version:  v26.0.0
+[debug] [2026-07-17T12:00:43.994Z] Time:          Fri Jul 17 2026 14:00:43 GMT+0200 (South Africa Standard Time)
+[debug] [2026-07-17T12:00:43.994Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-07-17T12:00:43.996Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-07-17T12:00:45.074Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-07-17T12:00:45.075Z] > authorizing via signed-in user (innomok@gmail.com)
+[debug] [2026-07-17T12:00:45.075Z] [iam] checking project schoolflow-admin-lite for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-07-17T12:00:45.075Z] Checked if tokens are valid: true, expires at: 1784292896008
+[debug] [2026-07-17T12:00:45.075Z] Checked if tokens are valid: true, expires at: 1784292896008
+[debug] [2026-07-17T12:00:45.075Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/schoolflow-admin-lite:testIamPermissions [none]
+[debug] [2026-07-17T12:00:45.075Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/schoolflow-admin-lite:testIamPermissions  x-goog-user-project=schoolflow-admin-lite
+[debug] [2026-07-17T12:00:45.075Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/schoolflow-admin-lite:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-07-17T12:00:45.609Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-07-17T12:00:45.610Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-07-17T12:00:46.950Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/schoolflow-admin-lite:testIamPermissions 403
+[debug] [2026-07-17T12:00:46.950Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/schoolflow-admin-lite:testIamPermissions {"error":{"code":403,"message":"Caller does not have required permission to use project schoolflow-admin-lite. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=schoolflow-admin-lite and then retry. Propagation of the new permission may take a few minutes.","status":"PERMISSION_DENIED","details":[{"@type":"type.googleapis.com/google.rpc.ErrorInfo","reason":"USER_PROJECT_DENIED","domain":"googleapis.com","metadata":{"consumer":"projects/schoolflow-admin-lite","consoleUrl":"https://console.developers.google.com/iam-admin/iam?project=schoolflow-admin-lite","containerInfo":"schoolflow-admin-lite","service":"cloudresourcemanager.googleapis.com"}},{"@type":"type.googleapis.com/google.rpc.LocalizedMessage","locale":"en-US","message":"Caller does not have required permission to use project schoolflow-admin-lite. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=schoolflow-admin-lite and then retry. Propagation of the new permission may take a few minutes."},{"@type":"type.googleapis.com/google.rpc.Help","links":[{"description":"Google developer console IAM admin","url":"https://console.developers.google.com/iam-admin/iam?project=schoolflow-admin-lite"}]}]}}
+[debug] [2026-07-17T12:00:46.951Z] [iam] error while checking permissions, command may fail: Request to https://cloudresourcemanager.googleapis.com/v1/projects/schoolflow-admin-lite:testIamPermissions had HTTP Error: 403, Caller does not have required permission to use project schoolflow-admin-lite. Grant the caller the roles/serviceusage.serviceUsageConsumer role, or a custom role with the serviceusage.services.use permission, by visiting https://console.developers.google.com/iam-admin/iam?project=schoolflow-admin-lite and then retry. Propagation of the new permission may take a few minutes.
+[debug] [2026-07-17T12:00:46.951Z] Checked if tokens are valid: true, expires at: 1784292896008
+[debug] [2026-07-17T12:00:46.951Z] Checked if tokens are valid: true, expires at: 1784292896008
+[debug] [2026-07-17T12:00:46.951Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/schoolflow-admin-lite [none]
+[debug] [2026-07-17T12:00:47.764Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/schoolflow-admin-lite 403
+[debug] [2026-07-17T12:00:47.765Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/schoolflow-admin-lite {"error":{"code":403,"message":"The caller does not have permission","status":"PERMISSION_DENIED"}}
+[debug] [2026-07-17T12:00:47.765Z] Request to https://firebase.googleapis.com/v1beta1/projects/schoolflow-admin-lite had HTTP Error: 403, The caller does not have permission
+[debug] [2026-07-17T12:00:47.766Z] FirebaseError: Request to https://firebase.googleapis.com/v1beta1/projects/schoolflow-admin-lite had HTTP Error: 403, The caller does not have permission
+    at responseToError (/Users/mphele4488/.npm-global/lib/node_modules/firebase-tools/lib/responseToError.js:53:12)
+    at RetryOperation._fn (/Users/mphele4488/.npm-global/lib/node_modules/firebase-tools/lib/apiv2.js:333:77)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+[error] 
+[error] Error: Failed to get Firebase project schoolflow-admin-lite. Please make sure the project exists and your account has permission to access it.

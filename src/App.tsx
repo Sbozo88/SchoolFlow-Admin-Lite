@@ -4,11 +4,16 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { DemoLayout } from "@/components/layout/DemoLayout";
 import { SchoolLayout } from "@/components/layout/SchoolLayout";
 import { SuperAdminLayout } from "@/components/layout/SuperAdminLayout";
+import { PublicLayout } from "@/components/layout/PublicLayout";
 
 import { ImpersonationBanner } from "@/components/tenant/ImpersonationBanner";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
 
 const Home = lazy(() => import("@/routes/page"));
+const Features = lazy(() => import("@/routes/features/page"));
+const Pricing = lazy(() => import("@/routes/pricing/page"));
+const Privacy = lazy(() => import("@/routes/privacy/page"));
+const Terms = lazy(() => import("@/routes/terms/page"));
 const NotFound = lazy(() => import("@/routes/not-found/page"));
 const Login = lazy(() => import("@/routes/login/page"));
 const Enroll = lazy(() => import("@/routes/enroll/page"));
@@ -66,7 +71,14 @@ export function App() {
   return (
     <Suspense fallback={<BrandedLoading fullScreen title="Loading SchoolFlow Admin Lite" detail="Preparing your workspace." />}>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route element={<PublicLayout><Outlet /></PublicLayout>}>
+          <Route path="/" element={<Home />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
+        </Route>
+        
         <Route path="/login" element={<Login />} />
         <Route path="/enroll" element={<Enroll />} />
         <Route path="/parent-form" element={<ParentForm />} />
