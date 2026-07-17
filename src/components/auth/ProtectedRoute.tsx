@@ -43,7 +43,7 @@ export function ProtectedRoute({
 
   useEffect(() => {
     if (!loading && isConfigured && !user) {
-      navigate(`/login?next=${encodeURIComponent(pathname || homePath)}`, { replace: true });
+      navigate(`/?next=${encodeURIComponent(pathname || homePath)}`, { replace: true });
     }
   }, [homePath, isConfigured, loading, navigate, pathname, user]);
 
@@ -221,7 +221,7 @@ function AccessShell({
           {action ?? (
             <Link
               className="inline-flex h-10 items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-bold text-white"
-              to="/login"
+              to="/"
             >
               Go to login
             </Link>

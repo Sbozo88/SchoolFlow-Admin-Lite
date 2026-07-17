@@ -47,7 +47,7 @@ export function SuperAdminLayout({ children }: { children: React.ReactNode }) {
     setIsSigningOut(true);
     try {
       await logout();
-      navigate("/login", { replace: true });
+      navigate("/", { replace: true });
     } catch {
       setIsSigningOut(false);
     }

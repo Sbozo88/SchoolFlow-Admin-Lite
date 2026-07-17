@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { Outlet, Route, Routes } from "react-router-dom";
+import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { DemoLayout } from "@/components/layout/DemoLayout";
 import { SchoolLayout } from "@/components/layout/SchoolLayout";
@@ -15,7 +15,7 @@ const Pricing = lazy(() => import("@/routes/pricing/page"));
 const Privacy = lazy(() => import("@/routes/privacy/page"));
 const Terms = lazy(() => import("@/routes/terms/page"));
 const NotFound = lazy(() => import("@/routes/not-found/page"));
-const Login = lazy(() => import("@/routes/login/page"));
+
 const Enroll = lazy(() => import("@/routes/enroll/page"));
 const ParentForm = lazy(() => import("@/routes/parent-form/page"));
 const SchoolHome = lazy(() => import("@/routes/school/page"));
@@ -79,7 +79,8 @@ export function App() {
           <Route path="/terms" element={<Terms />} />
         </Route>
         
-        <Route path="/login" element={<Login />} />
+
+        <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/enroll" element={<Enroll />} />
         <Route path="/parent-form" element={<ParentForm />} />
         <Route path="/school" element={<SchoolWorkspace />}>
