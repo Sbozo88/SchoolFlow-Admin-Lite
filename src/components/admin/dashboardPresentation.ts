@@ -6,6 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   Activity,
   BarChart3,
+  Boxes,
   CheckSquare,
   ClipboardList,
   CreditCard,
@@ -27,6 +28,7 @@ export type SchoolNavItem = {
 export const SCHOOL_PRIMARY_NAV: SchoolNavItem[] = [
   { label: "Dashboard", href: "/school", icon: LayoutDashboard },
   { label: "Learners", href: "/school/learners", icon: Users },
+  { label: "Programmes", href: "/school/programmes", icon: Boxes },
   { label: "Attendance", href: "/school/attendance", icon: CheckSquare },
   { label: "Payments", href: "/school/payments", icon: CreditCard },
   { label: "Parent Follow-Ups", href: "/school/parent-follow-ups", icon: PhoneForwarded },
@@ -58,50 +60,13 @@ export type SchoolQuickAction = {
   icon: LucideIcon;
 };
 
-/** Primary quick actions shown on the dashboard (same destinations as before). */
 export const SCHOOL_QUICK_ACTIONS: SchoolQuickAction[] = [
-  {
-    label: "Add Learner",
-    icon: Plus,
-    href: "/school/learners",
-    gradient: "from-[#6c5ce7] to-[#a29bfe]",
-    shadow: "shadow-[0_4px_15px_rgba(108,92,231,0.3)]",
-  },
-  {
-    label: "Mark Attendance",
-    icon: CheckSquare,
-    href: "/school/attendance",
-    gradient: "from-[#00d2d3] to-[#01a3a4]",
-    shadow: "shadow-[0_4px_15px_rgba(0,210,211,0.3)]",
-  },
-  {
-    label: "Record Payment",
-    icon: CreditCard,
-    href: "/school/payments",
-    gradient: "from-[#feca57] to-[#f0932b]",
-    shadow: "shadow-[0_4px_15px_rgba(254,202,87,0.3)]",
-  },
-  {
-    label: "Create Follow-Up",
-    icon: PhoneForwarded,
-    href: "/school/parent-follow-ups",
-    gradient: "from-[#ff6b81] to-[#ee5a24]",
-    shadow: "shadow-[0_4px_15px_rgba(255,107,129,0.3)]",
-  },
-  {
-    label: "Generate Report",
-    icon: FileText,
-    href: "/school/reports",
-    gradient: "from-[#1dd1a1] to-[#10ac84]",
-    shadow: "shadow-[0_4px_15px_rgba(29,209,161,0.3)]",
-  },
-  {
-    label: "Review Forms",
-    icon: ClipboardList,
-    href: "/school/parent-form",
-    gradient: "from-[#a29bfe] to-[#6c5ce7]",
-    shadow: "shadow-[0_4px_15px_rgba(162,155,254,0.3)]",
-  },
+  { label: "Add Learner", icon: Plus, href: "/school/learners", gradient: "from-[#6c5ce7] to-[#a29bfe]", shadow: "shadow-[0_4px_15px_rgba(108,92,231,0.3)]" },
+  { label: "Mark Attendance", icon: CheckSquare, href: "/school/attendance", gradient: "from-[#00d2d3] to-[#01a3a4]", shadow: "shadow-[0_4px_15px_rgba(0,210,211,0.3)]" },
+  { label: "Record Payment", icon: CreditCard, href: "/school/payments", gradient: "from-[#feca57] to-[#f0932b]", shadow: "shadow-[0_4px_15px_rgba(254,202,87,0.3)]" },
+  { label: "Create Follow-Up", icon: PhoneForwarded, href: "/school/parent-follow-ups", gradient: "from-[#ff6b81] to-[#ee5a24]", shadow: "shadow-[0_4px_15px_rgba(255,107,129,0.3)]" },
+  { label: "Generate Report", icon: FileText, href: "/school/reports", gradient: "from-[#1dd1a1] to-[#10ac84]", shadow: "shadow-[0_4px_15px_rgba(29,209,161,0.3)]" },
+  { label: "Review Forms", icon: ClipboardList, href: "/school/parent-form", gradient: "from-[#a29bfe] to-[#6c5ce7]", shadow: "shadow-[0_4px_15px_rgba(162,155,254,0.3)]" },
 ];
 
 export const SCHOOL_UPCOMING_EVENTS = [
