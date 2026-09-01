@@ -5,7 +5,6 @@ import { DemoLayout } from "@/components/layout/DemoLayout";
 import { SchoolLayout } from "@/components/layout/SchoolLayout";
 import { SuperAdminLayout } from "@/components/layout/SuperAdminLayout";
 import { PublicLayout } from "@/components/layout/PublicLayout";
-
 import { ImpersonationBanner } from "@/components/tenant/ImpersonationBanner";
 import { BrandedLoading } from "@/components/ui/BrandedLoading";
 
@@ -15,11 +14,11 @@ const Pricing = lazy(() => import("@/routes/pricing/page"));
 const Privacy = lazy(() => import("@/routes/privacy/page"));
 const Terms = lazy(() => import("@/routes/terms/page"));
 const NotFound = lazy(() => import("@/routes/not-found/page"));
-
 const Enroll = lazy(() => import("@/routes/enroll/page"));
 const ParentForm = lazy(() => import("@/routes/parent-form/page"));
 const SchoolHome = lazy(() => import("@/routes/school/page"));
 const Learners = lazy(() => import("@/routes/school/learners/page"));
+const Programmes = lazy(() => import("@/routes/school/programmes/page"));
 const Attendance = lazy(() => import("@/routes/school/attendance/page"));
 const Payments = lazy(() => import("@/routes/school/payments/page"));
 const FollowUps = lazy(() => import("@/routes/school/parent-follow-ups/page"));
@@ -40,10 +39,7 @@ const Audit = lazy(() => import("@/routes/super-admin/audit/page"));
 function SchoolWorkspace() {
   return (
     <ProtectedRoute workspace="client">
-      <SchoolLayout>
-        <ImpersonationBanner />
-        <Outlet />
-      </SchoolLayout>
+      <SchoolLayout><ImpersonationBanner /><Outlet /></SchoolLayout>
     </ProtectedRoute>
   );
 }
@@ -51,10 +47,7 @@ function SchoolWorkspace() {
 function DemoWorkspace() {
   return (
     <ProtectedRoute workspace="client">
-      <DemoLayout>
-        <ImpersonationBanner />
-        <Outlet />
-      </DemoLayout>
+      <DemoLayout><ImpersonationBanner /><Outlet /></DemoLayout>
     </ProtectedRoute>
   );
 }
@@ -78,14 +71,13 @@ export function App() {
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
         </Route>
-        
-
         <Route path="/login" element={<Navigate to="/" replace />} />
         <Route path="/enroll" element={<Enroll />} />
         <Route path="/parent-form" element={<ParentForm />} />
         <Route path="/school" element={<SchoolWorkspace />}>
           <Route index element={<SchoolHome />} />
           <Route path="learners" element={<Learners />} />
+          <Route path="programmes" element={<Programmes />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="payments" element={<Payments />} />
           <Route path="parent-follow-ups" element={<FollowUps />} />
@@ -99,6 +91,7 @@ export function App() {
         <Route path="/demo" element={<DemoWorkspace />}>
           <Route index element={<SchoolHome />} />
           <Route path="learners" element={<Learners />} />
+          <Route path="programmes" element={<Programmes />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="payments" element={<Payments />} />
           <Route path="parent-follow-ups" element={<FollowUps />} />
